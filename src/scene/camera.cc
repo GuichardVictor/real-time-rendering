@@ -28,15 +28,13 @@ void Camera::initPoints(int width, int height) {
 
 Point3 Camera::projectPoint(const Point3& p) const
 {
-    Point3 res = Point3(0,0,0);
     Vector3 v = Vector3(this->center_, p);
     Vector3 c = Vector3(this->center_, this->imagePlan[(HEIGHT / 2 - 1) * WIDTH + WIDTH / 2]);
     c = c.normalize();
     Vector3 nv = v.normalize();
     float angle = dot(c, nv);
     float dist = c.norm() * angle;
-    res = res + nv * dist;
-    return res;
+    return  this->center_ + nv * dist;
 }
 
 const Point3 &Camera::getCenter() const {
