@@ -1,6 +1,10 @@
 # Real time Rendering
 
+## Steps
+
+* z-index
+
 ## Authors
 
-victor.guichard
-guillaume.valente
+* victor.guichard
+* guillaume.valente
