@@ -4,6 +4,9 @@
 #include "point3.hh"
 #include "vector3.hh"
 
+#define HEIGHT 100
+#define WIDTH 100
+
 class Camera {
 
 public:
@@ -11,7 +14,9 @@ public:
     : center_(center), objective_(objective), up_(up), openFieldX_(x), openFieldY_(y), zDist_(z)
     {}
 
-    void initPoints(int width, int weight);
+    Point3 projectPoint(const Point3& p) const;
+
+    void initPoints(int width, int height);
 
     const Point3 &getCenter() const;
 

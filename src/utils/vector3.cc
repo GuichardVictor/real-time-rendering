@@ -19,12 +19,9 @@ std::ostream &operator<<(std::ostream &os, const Vector3 &v) {
     return os << "Vector x = " << v.x_ << ", y = " << v.y_ << ", z = " << v.z_;
 }
 
-Vector3 &Vector3::normalize() {
+Vector3 Vector3::normalize() const {
     float dist = sqrtf(this->x_ * this->x_ + this->y_* this->y_ + this->z_ * this->z_);
-    this->x_ = this->x_ / dist;
-    this->y_ = this->y_ / dist;
-    this->z_ = this->z_ / dist;
-    return *this;
+    return Vector3(this->x_ / dist, this->y_ / dist, this->z_ / dist);
 }
 
 float dot(const Vector3 &a, const Vector3 &b) {
