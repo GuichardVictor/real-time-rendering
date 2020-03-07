@@ -3,9 +3,39 @@
 #include <vector>
 #include "point3.hh"
 #include "vector3.hh"
+#include "image.hh"
+#include "triangle.hh"
 
 #define HEIGHT 100
 #define WIDTH 100
+
+struct Point2
+{
+    Point2(int x_, int y_)
+    :x(x_), y(y_)
+    {}
+
+    void print()
+    {
+        std::cout << "Point2:(x=" << x << ",y=" << y << ")\n"; 
+    }
+    int x;
+    int y;
+};
+
+struct PlaneEquation
+{
+
+
+    PlaneEquation(float a_, float b_, float c_, float d_)
+    : a(a_), b(b_), c(c_), d(d_)
+    {}
+    float a;
+    float b;
+    float c;
+    float d;
+};
+
 
 class Camera {
 
@@ -20,6 +50,19 @@ public:
 
     const Point3 &getCenter() const;
 
+    void updateBuffer(const Triangle& t);
+
+    void fillFlatBottom(const Point2& a, const Point2& b,
+                                       const Point2& c, PlaneEquation& eq);
+    
+    void fillFlatTop(const Point2&a , const Point2& b,
+                                    const Point2& c, PlaneEquation& eq);
+
+    void fillFlat(const Point2&a , const Point2& b,
+                                    const Point2& c, PlaneEquation& eq, bool top);
+
+    Point2 computePointCoordinate(const Point3& p) const;
+
     Point3 center_;
     Point3 objective_;
     Vector3 up_;
@@ -27,4 +70,6 @@ public:
     float openFieldY_;
     float zDist_;
     std::vector<Point3> imagePlan;
+    std::vector<Color> frameBuffer;
+    std::vector<float> depthBuffer;
 };

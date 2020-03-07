@@ -21,9 +21,9 @@ bool Image::save(const std::string& filename)
         {
             auto pixel = pixels[h * height + w];
 
-            file << std::to_string(pixel.red) << ' '
-                 << std::to_string(pixel.green) << ' '
-                 << std::to_string(pixel.blue) << ' ';
+            file << std::to_string((int)(pixel.red * PIXEL_MAX)) << ' '
+                 << std::to_string((int)(pixel.green * PIXEL_MAX)) << ' '
+                 << std::to_string((int)(pixel.blue * PIXEL_MAX)) << ' ';
 
             file << " ";
         }
