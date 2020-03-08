@@ -60,26 +60,10 @@ void Camera::updateBuffer(const Triangle& tr)
     auto coordB = computePointCoordinate(pb);
     auto coordC = computePointCoordinate(pc);
 
-    //DEBUG
+/*    //DEBUG
     coordA = Point2(10,10);
     coordB = Point2(15,10);
-    coordC = Point2(10, 20);
-
-    if(depthBuffer[coordA.y * WIDTH + coordA.x] > za) //pas de min pour opti future
-    {
-        depthBuffer[coordA.y * WIDTH + coordA.x] = za;
-    }
-
-    if(depthBuffer[coordB.y * WIDTH + coordB.x] > zb)
-    {
-        depthBuffer[coordB.y * WIDTH + coordB.x] = zb;
-    }
-
-    if(depthBuffer[coordC.y * WIDTH + coordC.x] > zc)
-    {
-        depthBuffer[coordC.y * WIDTH + coordC.x] = zc;
-    }
-
+    coordC = Point2(10, 20);*/
 
     auto f = std::pair<Point2, float>(coordA, za);
     auto s = std::pair<Point2, float>(coordB, zb);
@@ -105,7 +89,7 @@ void Camera::updateBuffer(const Triangle& tr)
     Vector3 cross = crossProduct(v1, v2);
 
     PlaneEquation eq = PlaneEquation(cross.x_, cross.y_, cross.z_,
-            cross.x_ * f.first.x + cross.y_ * f.first.y +cross.z_ * f.second);
+            (float)(cross.x_ * f.first.x + cross.y_ * f.first.y) + cross.z_ * f.second);
 
     if(f.first.y == s.first.y)
     {
@@ -119,9 +103,9 @@ void Camera::updateBuffer(const Triangle& tr)
 
     else
     {
-        float alpha = (s.first.y - f.first.y) / (t.first.y - f.first.y);
-        Point2 vi = Point2(f.first.x + (t.first.x - f.first.x) * 
-                            alpha, f.first.y + (t.first.y - f.first.y) * alpha);
+        float alpha = (float)(s.first.y - f.first.y) / (float)(t.first.y - f.first.y);
+        Point2 vi = Point2((float)(f.first.x + ((t.first.x - f.first.x) * alpha)),
+                           (float)(f.first.y + ((t.first.y - f.first.y) * alpha)));
 
         if(s.first.x < vi.x)
         {
@@ -130,8 +114,8 @@ void Camera::updateBuffer(const Triangle& tr)
         }
         else
         {
-            fillFlat(f.first, vi, s.first, eq, true);
-            fillFlat(vi, s.first, t.first, eq, false);
+            fillFlat(f.first, vi, s.first, eq, false);
+            fillFlat(vi, s.first, t.first, eq, true);
         }
     }
     
@@ -143,29 +127,33 @@ void Camera::fillFlat(const Point2& a,
                          PlaneEquation& eq, bool top)
 {
     auto down = Vector3(imagePlan[0], imagePlan[WIDTH]);
-    auto slopeNormalizedF = Vector3(imagePlan[a.y * WIDTH + a.x],
-                         imagePlan[c.y * WIDTH + c.x]).normalize();
-    auto slopeNormalizedS = Vector3(imagePlan[b.y * WIDTH + b.x],
-                         imagePlan[c.y * WIDTH + c.x]).normalize();
+    
+    auto slopeNormalizedF = Vector3(getCoord(a),getCoord(c)).normalize();
+    auto slopeNormalizedS = Vector3(getCoord(b), getCoord(c)).normalize();
 
     if (!top)
     {
-        slopeNormalizedF = Vector3(imagePlan[a.y * WIDTH + a.x],
-                            imagePlan[b.y * WIDTH + b.x]).normalize();
-        slopeNormalizedS = Vector3(imagePlan[a.y * WIDTH + a.x],
-                            imagePlan[c.y * WIDTH + c.x]).normalize();
+        slopeNormalizedF = Vector3(getCoord(a), getCoord(b)).normalize();
+        slopeNormalizedS = Vector3(getCoord(a), getCoord(c)).normalize();
     }
-    auto distF = dot(slopeNormalizedF, down);
-    auto distS = dot(slopeNormalizedS, down);
+
+    Point2 topRightVertex = b;
+    if(!top)
+    {
+        topRightVertex = a;
+    }
+
+    auto distF = down.norm() / dot(slopeNormalizedF, down.normalize());
+    auto distS = down.norm() / dot(slopeNormalizedS, down.normalize());
     for(int j = 0; j < c.y - a.y; j++)
     {
         if (a.y + j < 0)
             continue;
         if (a.y + j >= HEIGHT)
             break;
-        auto pinf = imagePlan[a.y * WIDTH + a.x] + slopeNormalizedF * (distF * (float)j);
+        auto pinf = getCoord(a) + slopeNormalizedF * (distF * (float)j);
         auto inf = computePointCoordinate(pinf);
-        auto psup = imagePlan[b.y * WIDTH + b.x] + slopeNormalizedS * (distS * (float)j);
+        auto psup = getCoord(topRightVertex) + slopeNormalizedS * (distS * (float)j);
         auto sup = computePointCoordinate(psup);
 
         if(inf.x > sup.x)
@@ -178,7 +166,7 @@ void Camera::fillFlat(const Point2& a,
         }
         for (int i = inf.x; i <= sup.x; i++)
         {
-            int index = i * WIDTH + inf.y;
+            int index = inf.y * WIDTH + i;
             if(i < 0)
                 continue;
             if(i >= WIDTH)
@@ -194,11 +182,22 @@ void Camera::fillFlat(const Point2& a,
 
             if(depthBuffer[index] > zCur)
             {
+                Point2 test = Point2(i, inf.y);
+                test.print();
                 depthBuffer[index] = zCur;
                 frameBuffer[index] = Color(1,1,1);
             }
         }
     }
+}
+
+
+Point3 Camera::getCoord(const Point2& p) const
+{
+    auto down = Vector3(imagePlan[0], imagePlan[WIDTH]);
+    auto right = Vector3(imagePlan[0], imagePlan[1]);
+
+    return imagePlan[0] + right * p.x + down * p.y;
 }
 
 Point2 Camera::computePointCoordinate(const Point3& p) const
