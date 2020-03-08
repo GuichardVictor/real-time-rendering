@@ -52,9 +52,18 @@ void Camera::updateBuffer(const Triangle& tr)
     auto pb = projectPoint(tr.b);
     auto pc = projectPoint(tr.c);
 
-    auto za = Vector3(pa, tr.a).norm();
-    auto zb = Vector3(pb, tr.b).norm();
-    auto zc = Vector3(pc, tr.c).norm();
+    auto forward = Vector3(center_, objective_).normalize();
+
+    auto vec = Vector3(center_, tr.a);
+    float distA = vec.norm() * dot(vec.normalize(), forward) - zDist_;
+    vec = Vector3(center_, tr.b);
+    float distB = vec.norm() * dot(vec.normalize(), forward) - zDist_;
+    vec = Vector3(center_, tr.c);
+    float distC = vec.norm() * dot(vec.normalize(), forward) - zDist_;
+
+    auto za = distA;
+    auto zb = distB;
+    auto zc = distC;
    
     auto coordA = computePointCoordinate(pa);
     auto coordB = computePointCoordinate(pb);
@@ -89,16 +98,16 @@ void Camera::updateBuffer(const Triangle& tr)
     Vector3 cross = crossProduct(v1, v2);
 
     PlaneEquation eq = PlaneEquation(cross.x_, cross.y_, cross.z_,
-            (float)(cross.x_ * f.first.x + cross.y_ * f.first.y) + cross.z_ * f.second);
+            - ((float)(cross.x_ * f.first.x + cross.y_ * f.first.y) + cross.z_ * f.second));
 
     if(f.first.y == s.first.y)
     {
-        fillFlat(f.first, s.first, t.first, eq, true);
+        fillFlat(f.first, s.first, t.first, eq, true,tr);
     }
 
     else if(s.first.y == t.first.y)
     {
-        fillFlat(f.first, s.first, t.first, eq, false);
+        fillFlat(f.first, s.first, t.first, eq, false, tr);
     }
 
     else
@@ -109,13 +118,13 @@ void Camera::updateBuffer(const Triangle& tr)
 
         if(s.first.x < vi.x)
         {
-            fillFlat(f.first, s.first, vi, eq, false);
-            fillFlat(s.first, vi, t.first, eq, true);
+            fillFlat(f.first, s.first, vi, eq, false, tr);
+            fillFlat(s.first, vi, t.first, eq, true, tr);
         }
         else
         {
-            fillFlat(f.first, vi, s.first, eq, false);
-            fillFlat(vi, s.first, t.first, eq, true);
+            fillFlat(f.first, vi, s.first, eq, false, tr);
+            fillFlat(vi, s.first, t.first, eq, true, tr);
         }
     }
     
@@ -124,7 +133,7 @@ void Camera::updateBuffer(const Triangle& tr)
 
 void Camera::fillFlat(const Point2& a,
                          const Point2& b, const Point2& c,
-                         PlaneEquation& eq, bool top)
+                         PlaneEquation& eq, bool top, const Triangle& tr)
 {
     auto down = Vector3(imagePlan[0], imagePlan[WIDTH]);
     
@@ -159,10 +168,10 @@ void Camera::fillFlat(const Point2& a,
         if(inf.x > sup.x)
             std::swap(inf, sup);
         
-        auto zCur = 0;
+        float zCur = 0;
         if(eq.c != 0)
         {
-            zCur = - (eq.a * (float) inf.x + eq.b * (float)inf.y + eq.d) / eq.c;
+            zCur = (- eq.a * (float) inf.x - eq.b * (float)inf.y - eq.d) / eq.c;
         }
         for (int i = inf.x; i <= sup.x; i++)
         {
@@ -171,21 +180,25 @@ void Camera::fillFlat(const Point2& a,
                 continue;
             if(i >= WIDTH)
                 break;
+
+            if(depthBuffer[index] > zCur)
+            {
+                if(depthBuffer[index] < 200)
+                {
+                Point2 test = Point2(i, inf.y);
+                test.print();
+                std::cout << depthBuffer[index] << " vs "<< zCur << std::endl;
+                }
+                depthBuffer[index] = zCur;
+                frameBuffer[index] = tr.color;
+            }
             if(eq.c == 0)
             {
                 zCur = 0;
             }
             else
             {
-                zCur = zCur - eq.a / eq.c; 
-            }
-
-            if(depthBuffer[index] > zCur)
-            {
-                Point2 test = Point2(i, inf.y);
-                test.print();
-                depthBuffer[index] = zCur;
-                frameBuffer[index] = Color(1,1,1);
+               zCur = zCur - eq.a / eq.c; 
             }
         }
     }

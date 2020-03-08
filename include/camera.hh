@@ -6,7 +6,7 @@
 #include "image.hh"
 #include "triangle.hh"
 
-#define HEIGHT 200
+#define HEIGHT 100
 #define WIDTH 100
 
 struct Point2
@@ -53,7 +53,8 @@ public:
     void updateBuffer(const Triangle& t);
 
     void fillFlat(const Point2&a , const Point2& b,
-                                    const Point2& c, PlaneEquation& eq, bool top);
+                                   const Point2& c, PlaneEquation& eq,
+                                   bool top, const Triangle& tr);
 
     Point3 getCoord(const Point2& p) const;
 
