@@ -183,12 +183,6 @@ void Camera::fillFlat(const Point2& a,
 
             if(depthBuffer[index] > zCur)
             {
-                if(depthBuffer[index] < 200)
-                {
-                Point2 test = Point2(i, inf.y);
-                test.print();
-                std::cout << depthBuffer[index] << " vs "<< zCur << std::endl;
-                }
                 depthBuffer[index] = zCur;
                 frameBuffer[index] = tr.color;
             }
