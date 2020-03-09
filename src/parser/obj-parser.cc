@@ -92,8 +92,6 @@ bool ObjParser::parse_object(std::ifstream& f)
     }
 
     return false;
-
-
 }
 
 
