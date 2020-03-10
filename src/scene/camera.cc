@@ -75,12 +75,6 @@ void Camera::updateBuffer(Triangle& tr)
     auto coordA = computePointCoordinate(pa);
     auto coordB = computePointCoordinate(pb);
     auto coordC = computePointCoordinate(pc);
-
-    coordA.print();
-    coordB.print();
-    coordC.print();
-
-    std::cout << std::endl;
 /*    //DEBUG
     coordA = Point2(10,10);
     coordB = Point2(15,10);
@@ -198,15 +192,15 @@ void Camera::fillFlat(const Point2& a,
                 depthBuffer[index] = zCur;
                 if(i == inf.x)
                 {
-                    frameBuffer[index] = Color(1,0,0);
+                    frameBuffer[index] = Color(1,1,0);
                 }
                 else if(i == sup.x)
                 {
-                    frameBuffer[index] = Color(0,0,1);
+                    frameBuffer[index] = Color(1, 1, 0);
                 }
                 else
                 {
-                    frameBuffer[index] = tr.color;
+                    frameBuffer[index] = Color(0.5, 0.5, 0.5);
                 }
                 
                 //frameBuffer[index] = computeColor(i, inf.y, zCur, tr);
