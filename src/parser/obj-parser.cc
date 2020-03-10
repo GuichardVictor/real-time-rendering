@@ -13,14 +13,14 @@ bool is_comment(const std::string& line)
 
 }
 
-std::vector<std::string> split(const std::string& line)
+std::vector<std::string> split(const std::string& line, char delim=' ')
 {
     std::vector<std::string> cont;
 
     std::stringstream ss(line);
     std::string token;
     
-    while (std::getline(ss, token, ' '))
+    while (std::getline(ss, token, delim))
     {
         cont.push_back(token);
     }
@@ -83,10 +83,13 @@ bool ObjParser::parse_object(std::ifstream& f)
         {
             // Triangle
             // Convert char to int and the vertices are 1 indexed in .obj files
+            auto index_1 = std::stoi(split(line_split[1], '/')[0]) - 1;
+            auto index_2 = std::stoi(split(line_split[2], '/')[0]) - 1;
+            auto index_3 = std::stoi(split(line_split[3], '/')[0]) - 1;
             triangles.push_back({
-                vertices[(line_split[1][0] - '0') - 1],
-                vertices[(line_split[2][0] - '0') - 1],
-                vertices[(line_split[3][0] - '0') - 1]
+                vertices[index_1],
+                vertices[index_2],
+                vertices[index_3]
             });
         }
     }
