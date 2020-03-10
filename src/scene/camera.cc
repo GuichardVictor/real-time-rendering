@@ -46,7 +46,7 @@ const Point3 &Camera::getCenter() const {
     return center_;
 }
 
-void Camera::updateBuffer(const Triangle& tr)
+void Camera::updateBuffer(Triangle& tr)
 {
     auto pa = projectPoint(tr.a);
     auto pb = projectPoint(tr.b);
@@ -55,11 +55,18 @@ void Camera::updateBuffer(const Triangle& tr)
     auto forward = Vector3(center_, objective_).normalize();
 
     auto vec = Vector3(center_, tr.a);
-    float distA = vec.norm() * dot(vec.normalize(), forward) - zDist_;
+    float distA = vec.norm() * dot(vec.normalize(), forward);
     vec = Vector3(center_, tr.b);
-    float distB = vec.norm() * dot(vec.normalize(), forward) - zDist_;
+    float distB = vec.norm() * dot(vec.normalize(), forward);
     vec = Vector3(center_, tr.c);
-    float distC = vec.norm() * dot(vec.normalize(), forward) - zDist_;
+    float distC = vec.norm() * dot(vec.normalize(), forward);
+
+//FIXME: remove this normal computation later
+    tr.normal = crossProduct(Vector3(tr.a, tr.b), Vector3(tr.a, tr.c)).normalize();
+    if (dot(forward, tr.normal) > 0)
+    {
+        tr.normal = tr.normal * -1;
+    }
 
     auto za = distA;
     auto zb = distB;
@@ -184,7 +191,7 @@ void Camera::fillFlat(const Point2& a,
             if(depthBuffer[index] > zCur)
             {
                 depthBuffer[index] = zCur;
-                frameBuffer[index] = tr.color;
+                frameBuffer[index] = computeColor(i, inf.y, zCur, tr);
             }
             if(eq.c == 0)
             {
@@ -198,6 +205,39 @@ void Camera::fillFlat(const Point2& a,
     }
 }
 
+
+Color Camera::computeColor(int x, int y, float z, const Triangle& tr)
+{
+    Vector3 vc = Vector3(center_, imagePlan[y * WIDTH + x]);
+    Vector3 forward = Vector3(center_, objective_);
+    float dist = z / dot(vc.normalize(), forward.normalize());
+    Point3 intersect = imagePlan[y * WIDTH + x] + vc * dist;
+
+    Color res = Color(0,0,0);
+    Vector3 reflected = vc.normalize() - tr.normal * 2.0 * dot(vc.normalize(), tr.normal);
+    for(const auto& light : lights)
+    {
+        Color effectiveColor = light.color * tr.color;
+        Color ambientColor = effectiveColor * tr.ambient;
+        Vector3 l = Vector3(intersect, light.center);
+        l = l.normalize();
+        float angle = dot(l, tr.normal);
+        if(angle <= 0.)
+        {
+            //continue;
+            angle = -angle;
+        }
+        Color diffuseColor = effectiveColor * tr.diffuse * angle;
+        float factor = dot(reflected, l);
+        factor = powf(factor, tr.shininess);
+        if (dot(reflected, l) < 0.)
+            factor = - factor;
+        Color specularColor = light.color * tr.specular * factor;
+        res = res + ((ambientColor + diffuseColor + specularColor));
+    }
+
+    return res;
+}
 
 Point3 Camera::getCoord(const Point2& p) const
 {

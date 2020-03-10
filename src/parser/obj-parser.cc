@@ -86,7 +86,8 @@ bool ObjParser::parse_object(std::ifstream& f)
             triangles.push_back({
                 vertices[(line_split[1][0] - '0') - 1],
                 vertices[(line_split[2][0] - '0') - 1],
-                vertices[(line_split[3][0] - '0') - 1]
+                vertices[(line_split[3][0] - '0') - 1],
+                Color(0,1,0)
             });
         }
     }

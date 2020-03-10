@@ -10,6 +10,21 @@ struct Color
     :red(r), green(g), blue(b)
     {}
 
+    Color operator*(float f) const
+    {
+        return Color(red * f, green * f, blue * f);
+    }
+
+    Color operator*(const Color c) const
+    {
+        return Color(red * c.red, green * c.green, blue * c.blue);
+    }
+
+    Color operator+(const Color c) const
+    {
+        return Color(red + c.red, green + c.green, blue + c.blue);
+    }
+ 
     float red = 0;
     float green = 0;
     float blue = 0;

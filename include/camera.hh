@@ -6,8 +6,19 @@
 #include "image.hh"
 #include "triangle.hh"
 
-#define HEIGHT 100
-#define WIDTH 100
+#define HEIGHT 720
+#define WIDTH 1080
+
+class Light
+{
+    public:
+    Light(const Color& _color, const Point3& _center)
+    : color(_color), center(_center)
+    {}
+
+    Color color;
+    Point3 center;
+};
 
 struct Point2
 {
@@ -50,12 +61,13 @@ public:
 
     const Point3 &getCenter() const;
 
-    void updateBuffer(const Triangle& t);
+    void updateBuffer(Triangle& t);
 
     void fillFlat(const Point2&a , const Point2& b,
                                    const Point2& c, PlaneEquation& eq,
                                    bool top, const Triangle& tr);
 
+    Color computeColor(int x, int y, float z, const Triangle& tr);
     Point3 getCoord(const Point2& p) const;
 
     Point2 computePointCoordinate(const Point3& p) const;
@@ -69,4 +81,5 @@ public:
     std::vector<Point3> imagePlan;
     std::vector<Color> frameBuffer;
     std::vector<float> depthBuffer;
+    std::vector<Light> lights;
 };
