@@ -76,6 +76,11 @@ void Camera::updateBuffer(Triangle& tr)
     auto coordB = computePointCoordinate(pb);
     auto coordC = computePointCoordinate(pc);
 
+    coordA.print();
+    coordB.print();
+    coordC.print();
+
+    std::cout << std::endl;
 /*    //DEBUG
     coordA = Point2(10,10);
     coordB = Point2(15,10);
@@ -87,7 +92,7 @@ void Camera::updateBuffer(Triangle& tr)
 
     if(f.first.y > s.first.y)
         std::swap(f, s);
-    if(f.first.y > s.first.y)
+    if(f.first.y > t.first.y)
         std::swap(f, t);
     if(s.first.y > t.first.y)
         std::swap(s, t);
@@ -188,10 +193,23 @@ void Camera::fillFlat(const Point2& a,
             if(i >= WIDTH)
                 break;
 
-            if(depthBuffer[index] > zCur)
+            if(depthBuffer[index] > zCur && zCur > 0)
             {
                 depthBuffer[index] = zCur;
-                frameBuffer[index] = computeColor(i, inf.y, zCur, tr);
+                if(i == inf.x)
+                {
+                    frameBuffer[index] = Color(1,0,0);
+                }
+                else if(i == sup.x)
+                {
+                    frameBuffer[index] = Color(0,0,1);
+                }
+                else
+                {
+                    frameBuffer[index] = tr.color;
+                }
+                
+                //frameBuffer[index] = computeColor(i, inf.y, zCur, tr);
             }
             if(eq.c == 0)
             {
@@ -224,7 +242,7 @@ Color Camera::computeColor(int x, int y, float z, const Triangle& tr)
         float angle = dot(l, tr.normal);
         if(angle <= 0.)
         {
-            //continue;
+            continue;
             angle = -angle;
         }
         Color diffuseColor = effectiveColor * tr.diffuse * angle;

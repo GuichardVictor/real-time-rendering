@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 
 void renderScene(std::vector<Triangle> objects)
 {
-    Camera c = Camera(Point3(0,0,15), Point3(0,0,14), Vector3(0,1,0), 2.04, 2.04, 1);
+    Camera c = Camera(Point3(0,0,10), Point3(0,0,9), Vector3(0,1,0), 2.04, 2.04, 1);
     std::vector<Light> lights;
     lights.push_back(Light(Color(1,1,1), {0,15,0}));
     c.initPoints(WIDTH, HEIGHT);
@@ -37,5 +37,5 @@ void renderScene(std::vector<Triangle> objects)
     }
     Image img(WIDTH, HEIGHT);
     img.pixels = c.frameBuffer;
-    img.save("/home/ironfan/Ing2/ISIM/real-time-rendering/test.ppm");
+    img.save("test.ppm");
 }
