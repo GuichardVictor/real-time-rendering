@@ -6,7 +6,7 @@
 #include "image.hh"
 #include "triangle.hh"
 
-#define HEIGHT 720
+#define HEIGHT 1080
 #define WIDTH 1080
 
 class Light
@@ -51,9 +51,13 @@ struct PlaneEquation
 class Camera {
 
 public:
-    Camera(const Point3& center, const Point3& objective, const Vector3 &up, float x, float y, float z)
-    : center_(center), objective_(objective), up_(up), openFieldX_(x), openFieldY_(y), zDist_(z)
-    {}
+    Camera(const Point3& center, const Point3& objective, const Vector3& globalUp, float x, float y)
+    : center_(center), objective_(objective), up_(globalUp), openFieldX_(x), openFieldY_(y)
+    {
+        init();
+    }
+
+    void init();
 
     Point3 projectPoint(const Point3& p) const;
 

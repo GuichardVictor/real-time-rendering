@@ -26,16 +26,17 @@ int main(int argc, char* argv[])
 
 void renderScene(std::vector<Triangle> objects)
 {
-    Camera c = Camera(Point3(0,0,10), Point3(0,0,9), Vector3(0,1,0), 2.04, 2.04, 1);
+    Vector3 globalUp = Vector3(0,1,0);
+    Camera c = Camera(Point3(0,0,5), Point3(0,0,4), globalUp, 2.04, 2.04);
     std::vector<Light> lights;
-    lights.push_back(Light(Color(1,1,1), {0,15,0}));
+    lights.push_back(Light(Color(1,1,1), {0,0,5}));
     c.initPoints(WIDTH, HEIGHT);
     c.lights = lights;
+    Image img(WIDTH, HEIGHT);
     for(auto& obj : objects)
     {
         c.updateBuffer(obj);
     }
-    Image img(WIDTH, HEIGHT);
     img.pixels = c.frameBuffer;
     img.save("test.ppm");
 }

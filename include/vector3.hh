@@ -6,6 +6,8 @@ class Vector3 {
 public:
     friend float dot(const Vector3& a, const Vector3& b);
     friend Vector3 crossProduct(const Vector3& a, const Vector3& b);
+
+    Vector3() = default;
     Vector3(float x, float y, float z)
     : x_(x), y_(y), z_(z)
     {}

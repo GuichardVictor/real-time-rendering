@@ -4,6 +4,24 @@
 #include "vector3.hh"
 #include "camera.hh"
 
+void Camera::init()
+{
+    zDist_ = Vector3(center_, objective_).norm();
+    Vector3 forward = Vector3(center_, objective_).normalize();
+    Vector3 globalUp = up_.normalize();
+    float cosAngle = dot(globalUp, forward);
+    if(cosAngle == 0)
+    {
+        return;
+    }
+    Point3 intersect = center_ + forward * cosAngle;
+    up_ = Vector3(intersect, Point3(globalUp.getX(), globalUp.getY(), globalUp.getZ()));
+    if(dot(up_, globalUp) < 0)
+    {
+        up_ = up_ * - 1;
+    }
+}
+
 void Camera::initPoints(int width, int height) {
     Vector3 v = Vector3(this->center_, this->objective_);
     v = v.normalize();
@@ -190,20 +208,16 @@ void Camera::fillFlat(const Point2& a,
             if(depthBuffer[index] > zCur && zCur > 0)
             {
                 depthBuffer[index] = zCur;
-                if(i == inf.x)
+               /* if(i == inf.x)
                 {
                     frameBuffer[index] = Color(1,1,0);
                 }
                 else if(i == sup.x)
                 {
                     frameBuffer[index] = Color(1, 1, 0);
-                }
-                else
-                {
-                    frameBuffer[index] = Color(0.5, 0.5, 0.5);
-                }
+                }*/
+                    frameBuffer[index] = computeColor(i, inf.y, zCur, tr);
                 
-                //frameBuffer[index] = computeColor(i, inf.y, zCur, tr);
             }
             if(eq.c == 0)
             {
@@ -237,7 +251,6 @@ Color Camera::computeColor(int x, int y, float z, const Triangle& tr)
         if(angle <= 0.)
         {
             continue;
-            angle = -angle;
         }
         Color diffuseColor = effectiveColor * tr.diffuse * angle;
         float factor = dot(reflected, l);
