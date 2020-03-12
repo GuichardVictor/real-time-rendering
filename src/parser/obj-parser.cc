@@ -36,11 +36,6 @@ std::vector<std::string> split(const std::string& line, char delim=' ')
 
 bool ObjParser::parse_object(std::ifstream& f)
 {
-    // Clearing previous settings
-    vertices.clear();
-    texture_vertices.clear();
-    normal_vertices.clear();
-
     // Reading line
     std::string line;
 

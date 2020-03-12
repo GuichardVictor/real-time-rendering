@@ -15,8 +15,10 @@
 class Camera {
 
 public:
-    Camera(const Point3& center, const Point3& objective, const Vector3& globalUp, float x, float y)
-    : center_(center), objective_(objective), up_(globalUp), openFieldX_(x), openFieldY_(y)
+    Camera(const Point3& center, const Point3& objective,
+     const Vector3& globalUp, const Vector3& globalRight, float x, float y)
+    : center_(center), objective_(objective), globalUp_(globalUp),
+     globalRight_(globalRight), openFieldX_(x), openFieldY_(y)
     {
         init();
     }
@@ -44,7 +46,8 @@ public:
 
     Point3 center_;
     Point3 objective_;
-    Vector3 up_;
+    Vector3 globalUp_;
+    Vector3 globalRight_;
     float openFieldX_;
     float openFieldY_;
     float zDist_;
@@ -53,4 +56,5 @@ public:
     std::vector<float> depthBuffer;
     std::vector<DirectionalLight> lights;
     std::vector<Point3> targets;
+    Vector3 up_;
 };

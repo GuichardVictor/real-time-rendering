@@ -8,15 +8,28 @@ void Camera::init()
 {
     zDist_ = Vector3(center_, objective_).norm();
     Vector3 forward = Vector3(center_, objective_).normalize();
-    Vector3 globalUp = up_.normalize();
-    float cosAngle = dot(globalUp, forward);
+    Vector3 globalRef = globalUp_.normalize();
+    float cosAngle = dot(globalRef, forward);
+    // deja orthogonaux pas besoin de calculer une projection
     if(cosAngle == 0)
     {
+        up_ = globalUp_;
         return;
     }
-    Point3 intersect = center_ + forward * cosAngle;
-    up_ = Vector3(intersect, Point3(globalUp.getX(), globalUp.getY(), globalUp.getZ()));
-    if(dot(up_, globalUp) < 0)
+    //si les vecteur sont paralleles utiliser le vecteur right
+    if(std::abs(cosAngle) == 1)
+    {
+        globalRef = globalRight_.normalize();
+        up_ = crossProduct(globalUp_, globalRight_);
+        if (cosAngle == -1)
+        {
+            up_ = up_ * -1;
+        }
+        return;
+    }
+    Point3 intersect = Point3(0,0,0) + forward * cosAngle;
+    up_ = Vector3(intersect, Point3(globalRef.getX(), globalRef.getY(), globalRef.getZ())).normalize();
+    if(dot(up_, globalRef) < 0)
     {
         up_ = up_ * - 1;
     }
@@ -283,14 +296,23 @@ void Camera::addShadow()
         for(int i = 0; i <  WIDTH; i++)
         {
             int index = j * WIDTH + i;
+            if(depthBuffer[index] >= std::numeric_limits<float>::max())
+            {
+                continue;
+            }
             Vector3 v = Vector3(center_, imagePlan[index]).normalize();
             float cosAngle = dot(v, forward);
-            float dist = (depthBuffer[index] + zDist_) / cosAngle;
+            float dist = (float)(depthBuffer[index] + zDist_) / cosAngle;
             Point3 target = center_ + v * dist;
             //FIXME: handle several lights
 
             Vector3 forwardLight = lights[0].direction.normalize();
             Point2 p2LightIndex = lights[0].computePointCoordinate(target);
+            if(p2LightIndex.x < 0 || p2LightIndex.x >= lights[0].width ||
+               p2LightIndex.y < 0 || p2LightIndex.y >= lights[0].height)
+            {
+                continue;
+            }
             int lightIndex = p2LightIndex.y * lights[0].width + p2LightIndex.x;
             Point3 imagePlanPointLight = lights[0].imagePlan[lightIndex];
             float distCamTgtLight = Vector3(imagePlanPointLight, target).norm();

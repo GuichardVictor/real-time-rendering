@@ -27,7 +27,8 @@ int main(int argc, char* argv[])
 void renderScene(std::vector<Triangle>& objects)
 {
     Vector3 globalUp = Vector3(0,1,0);
-    Camera c = Camera(Point3(0,0,10), Point3(0,0,9), globalUp, 2.04, 2.04);
+    Vector3 globalRight = Vector3(1,0,0);
+    Camera c = Camera(Point3(0,9,0), Point3(0,8,0.1), globalUp, globalRight, 2.04, 2.04);
     std::vector<DirectionalLight> lights;
     lights.push_back(DirectionalLight(Color(1,1,1), {0,0,10},
                                       Vector3(0,0,9), 0.5, WIDTH, HEIGHT));
@@ -38,14 +39,15 @@ void renderScene(std::vector<Triangle>& objects)
     {
         c.updateBuffer(obj);
     }
-    /*for(auto &light : lights)
+    for(auto &light : c.lights)
     {
-        light.initBuffer(c);
+        light.initBuffer();
         for(auto& obj: objects)
         {
             light.updateBuffer(obj);
         }
-    }*/
+    }
+    //c.addShadow();
     img.pixels = c.frameBuffer;
     img.save("test.ppm");
 }
