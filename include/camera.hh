@@ -1,51 +1,15 @@
 #pragma once
 
 #include <vector>
-#include "point3.hh"
 #include "vector3.hh"
-#include "image.hh"
+#include "light.hh"
 #include "triangle.hh"
+#include "Point2.hh"
+#include "PlaneEquation.hh"
+
 
 #define HEIGHT 1080
 #define WIDTH 1080
-
-class Light
-{
-    public:
-    Light(const Color& _color, const Point3& _center)
-    : color(_color), center(_center)
-    {}
-
-    Color color;
-    Point3 center;
-};
-
-struct Point2
-{
-    Point2(int x_, int y_)
-    :x(x_), y(y_)
-    {}
-
-    void print()
-    {
-        std::cout << "Point2:(x=" << x << ",y=" << y << ")\n"; 
-    }
-    int x;
-    int y;
-};
-
-struct PlaneEquation
-{
-
-
-    PlaneEquation(float a_, float b_, float c_, float d_)
-    : a(a_), b(b_), c(c_), d(d_)
-    {}
-    float a;
-    float b;
-    float c;
-    float d;
-};
 
 
 class Camera {
@@ -76,6 +40,8 @@ public:
 
     Point2 computePointCoordinate(const Point3& p) const;
 
+    void addShadow();
+
     Point3 center_;
     Point3 objective_;
     Vector3 up_;
@@ -85,5 +51,6 @@ public:
     std::vector<Point3> imagePlan;
     std::vector<Color> frameBuffer;
     std::vector<float> depthBuffer;
-    std::vector<Light> lights;
+    std::vector<DirectionalLight> lights;
+    std::vector<Point3> targets;
 };

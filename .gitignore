@@ -3,3 +3,4 @@ a.out
 build
 test.ppm
 *.obj
+.vscode/

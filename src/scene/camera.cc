@@ -93,10 +93,6 @@ void Camera::updateBuffer(Triangle& tr)
     auto coordA = computePointCoordinate(pa);
     auto coordB = computePointCoordinate(pb);
     auto coordC = computePointCoordinate(pc);
-/*    //DEBUG
-    coordA = Point2(10,10);
-    coordB = Point2(15,10);
-    coordC = Point2(10, 20);*/
 
     auto f = std::pair<Point2, float>(coordA, za);
     auto s = std::pair<Point2, float>(coordB, zb);
@@ -208,15 +204,7 @@ void Camera::fillFlat(const Point2& a,
             if(depthBuffer[index] > zCur && zCur > 0)
             {
                 depthBuffer[index] = zCur;
-               /* if(i == inf.x)
-                {
-                    frameBuffer[index] = Color(1,1,0);
-                }
-                else if(i == sup.x)
-                {
-                    frameBuffer[index] = Color(1, 1, 0);
-                }*/
-                    frameBuffer[index] = computeColor(i, inf.y, zCur, tr);
+                frameBuffer[index] = computeColor(i, inf.y, zCur, tr);
                 
             }
             if(eq.c == 0)
@@ -284,4 +272,36 @@ Point2 Camera::computePointCoordinate(const Point3& p) const
     int coefx = round(dot(rightNormalized, tmp) / right.norm());
     int coefy = round(dot(downNormalized, tmp) / down.norm());
     return Point2(coefx, coefy);
+}
+
+
+void Camera::addShadow()
+{
+    Vector3 forward = Vector3(center_, objective_).normalize();
+    for(int j = 0; j < HEIGHT; j++)
+    {
+        for(int i = 0; i <  WIDTH; i++)
+        {
+            int index = j * WIDTH + i;
+            Vector3 v = Vector3(center_, imagePlan[index]).normalize();
+            float cosAngle = dot(v, forward);
+            float dist = (depthBuffer[index] + zDist_) / cosAngle;
+            Point3 target = center_ + v * dist;
+            //FIXME: handle several lights
+
+            Vector3 forwardLight = lights[0].direction.normalize();
+            Point2 p2LightIndex = lights[0].computePointCoordinate(target);
+            int lightIndex = p2LightIndex.y * lights[0].width + p2LightIndex.x;
+            Point3 imagePlanPointLight = lights[0].imagePlan[lightIndex];
+            float distCamTgtLight = Vector3(imagePlanPointLight, target).norm();
+            Vector3 vLight = Vector3(center_, imagePlanPointLight).normalize();
+            float cosAngleLight = dot(vLight, forwardLight);
+            float distTgtLight = (lights[0].depthBuffer[lightIndex] + lights[0].zDist) / cosAngleLight;
+
+            if(distCamTgtLight > distTgtLight)
+            {
+                frameBuffer[index] = Color(0,0,0);
+            }
+        }
+    }
 }
