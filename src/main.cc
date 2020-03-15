@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
     {
         std::cout << "something went wrong\n";
     }
-    renderScene(objs.triangles);/*
+    renderScene(objs.triangles, true);/*
     Vector3 globalUp = Vector3(0,1,0);
     Vector3 globalRight = Vector3(1,0,0);
     Camera c = Camera(Point3(0,0,0), Point3(0,0,1), globalUp, globalRight, 0.78, 0.78);
@@ -38,10 +38,10 @@ void renderScene(std::vector<Triangle>& objects, bool debug)
 {
     Vector3 globalUp = Vector3(0,1,0);
     Vector3 globalRight = Vector3(1,0,0);
-    Camera c = Camera(Point3(2.5,2.5,2.5), Point3(2.5,2.4,2.5), globalUp, globalRight, 0.78, 0.78);
+    Camera c = Camera(Point3(2.5,1.5,2.5), Point3(2.4,1.5,2.4), globalUp, globalRight, 2.04, 2.04);
     std::vector<DirectionalLight> lights;
-    lights.push_back(DirectionalLight(Color(1,1,1), {2.5,2.5, 2.5},
-                                      Vector3(0,0,9), 0.5, WIDTH, HEIGHT));
+    lights.push_back(DirectionalLight(Color(1,1,1), {2.5,1.5, 2.5},
+                                      Vector3(0,0,1), 0.5, WIDTH, HEIGHT));
     c.initPoints(WIDTH, HEIGHT);
     c.lights = lights;
     Image img(WIDTH, HEIGHT);

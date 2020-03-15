@@ -39,11 +39,18 @@ Point3 DirectionalLight::projectPoint(const Point3& p) const
 {
     Vector3 v = Vector3(this->center, p);
     Vector3 c = direction;
-    c = c.normalize();
     Vector3 nv = v.normalize();
-    float cosAngle = dot(c, nv);
+    float cosAngle = dot(c.normalize(), nv);
+    if(cosAngle <= 0)
+    {
+        Point3 newP = p + c.normalize() * -2 * cosAngle * v.norm() + c * 1;
+        v = Vector3(this->center, newP);
+        nv = v.normalize();
+        cosAngle = dot(c.normalize(), nv);
+    }
     float dist = c.norm() / cosAngle;
-    return  this->center + nv * dist;
+    auto res = this->center + nv * dist;
+    return res;
 }
 
 void DirectionalLight::updateBuffer(Triangle& tr)

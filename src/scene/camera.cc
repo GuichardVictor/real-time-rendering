@@ -74,6 +74,9 @@ Point3 Camera::projectPoint(const Point3& p) const
         v = Vector3(this->center_, newP);
         nv = v.normalize();
         cosAngle = dot(c.normalize(), nv);
+        float dist = v.norm() * cosAngle;
+        auto res = newP + c.normalize() * - dist;
+        return res;
     }
     float dist = c.norm() / cosAngle;
     auto res = this->center_ + nv * dist;
@@ -263,7 +266,7 @@ Color Camera::computeColor(int x, int y, float z, const Triangle& tr)
         Vector3 l = Vector3(intersect, light.center);
         l = l.normalize();
         float angle = dot(l, tr.normal);
-        if(angle <= 0.)
+        if(angle < 0.)
         {
             continue;
         }
