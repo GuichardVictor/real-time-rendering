@@ -26,7 +26,7 @@ void DirectionalLight::initBuffer()
     {
         for(int i = 0 ; i < width; i++)
         {
-            Point3 toAdd = Point3(hrCorner.getX(), hrCorner.getY(), hrCorner.getZ());
+            Point3 toAdd = Point3(hrCorner.x_, hrCorner.y_, hrCorner.z_);
             toAdd = toAdd + right * ((padx * (float) i));
             toAdd = toAdd + (up  * -1. * (pady  * (float) j));
             this->imagePlan.push_back(toAdd);

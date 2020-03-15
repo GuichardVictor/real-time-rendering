@@ -28,7 +28,7 @@ void Camera::init()
         return;
     }
     Point3 intersect = Point3(0,0,0) + forward * cosAngle;
-    up_ = Vector3(intersect, Point3(globalRef.getX(), globalRef.getY(), globalRef.getZ())).normalize();
+    up_ = Vector3(intersect, Point3(globalRef.x_, globalRef.y_, globalRef.z_)).normalize();
     if(dot(up_, globalRef) < 0)
     {
         up_ = up_ * - 1;
@@ -52,7 +52,7 @@ void Camera::initPoints(int width, int height) {
     {
         for(int i = 0 ; i < width; i++)
         {
-            Point3 toAdd = Point3(hrCorner.getX(), hrCorner.getY(), hrCorner.getZ());
+            Point3 toAdd = Point3(hrCorner.x_, hrCorner.y_, hrCorner.z_);
             toAdd = toAdd + right * ((padx * (float) i));
             toAdd = toAdd + (this->up_  * -1. * (pady  * (float) j));
             this->imagePlan.push_back(toAdd);
@@ -75,7 +75,8 @@ Point3 Camera::projectPoint(const Point3& p) const
         nv = v.normalize();
         cosAngle = dot(c.normalize(), nv);
         float dist = v.norm() * cosAngle;
-        auto res = newP + c.normalize() * - dist;
+        auto toAdd = c.normalize() * (- dist);
+        Point3 res = newP + toAdd;
         return res;
     }
     float dist = c.norm() / cosAngle;
@@ -226,7 +227,10 @@ void Camera::fillFlat(const Point2& a,
         {
             int index = inf.y * WIDTH + i;
             if(i < 0)
+            {
+                zCur = zCur - eq.a / eq.c; 
                 continue;
+            }
             if(i >= WIDTH)
                 break;
 
@@ -234,7 +238,6 @@ void Camera::fillFlat(const Point2& a,
             {
                 depthBuffer[index] = zCur;
                 frameBuffer[index] = computeColor(i, inf.y, zCur, tr);
-                //frameBuffer[index] = tr.color;
             }
             if(eq.c == 0)
             {

@@ -28,18 +28,6 @@ float dot(const Vector3 &a, const Vector3 &b) {
     return a.x_ * b.x_ + a.y_ * b.y_ + a.z_ * b.z_;
 }
 
-float Vector3::getX() const {
-    return x_;
-}
-
-float Vector3::getY() const {
-    return y_;
-}
-
-float Vector3::getZ() const {
-    return z_;
-}
-
 float Vector3::norm() {
     return sqrtf(this->x_ * this->x_ + this->y_ * this->y_ + this->z_ * this->z_);
 }

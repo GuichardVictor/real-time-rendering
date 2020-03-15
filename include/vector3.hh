@@ -2,6 +2,8 @@
 
 #include "point3.hh"
 
+class Point3;
+
 class Vector3 {
 public:
     friend float dot(const Vector3& a, const Vector3& b);
@@ -14,16 +16,10 @@ public:
 
     Vector3(const Point3& a, const Point3& b)
     {
-        x_ = b.getX() - a.getX();
-        y_ = b.getY() - a.getY();
-        z_ = b.getZ() - a.getZ();
+        x_ = b.x_ - a.x_;
+        y_ = b.y_ - a.y_;
+        z_ = b.z_ - a.z_;
     }
-
-    float getX() const;
-
-    float getY() const;
-
-    float getZ() const;
 
     friend std::ostream& operator<<(std::ostream &os, const Vector3 &v);
     Vector3 operator*(const float &l) const;
