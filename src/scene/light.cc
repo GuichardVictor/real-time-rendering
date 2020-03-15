@@ -61,13 +61,6 @@ void DirectionalLight::updateBuffer(Triangle& tr)
     vec = Vector3(center, tr.c);
     float distC = vec.norm() * dot(vec.normalize(), forward);
 
-//FIXME: remove this normal computation later
-    tr.normal = crossProduct(Vector3(tr.a, tr.b), Vector3(tr.a, tr.c)).normalize();
-    if (dot(forward, tr.normal) > 0)
-    {
-        tr.normal = tr.normal * -1;
-    }
-
     auto za = distA;
     auto zb = distB;
     auto zc = distC;

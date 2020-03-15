@@ -8,8 +8,8 @@
 #include "PlaneEquation.hh"
 
 
-#define HEIGHT 1080
-#define WIDTH 1080
+#define HEIGHT 500
+#define WIDTH 500
 
 
 class Camera {

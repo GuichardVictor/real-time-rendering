@@ -66,11 +66,18 @@ Point3 Camera::projectPoint(const Point3& p) const
 {
     Vector3 v = Vector3(this->center_, p);
     Vector3 c = Vector3(this->center_, this->objective_);
-    c = c.normalize();
     Vector3 nv = v.normalize();
-    float cosAngle = dot(c, nv);
+    float cosAngle = dot(c.normalize(), nv);
+    if(cosAngle <= 0)
+    {
+        Point3 newP = p + c.normalize() * -2 * cosAngle * v.norm() + c * 1;
+        v = Vector3(this->center_, newP);
+        nv = v.normalize();
+        cosAngle = dot(c.normalize(), nv);
+    }
     float dist = c.norm() / cosAngle;
-    return  this->center_ + nv * dist;
+    auto res = this->center_ + nv * dist;
+    return res;
 }
 
 const Point3 &Camera::getCenter() const {
@@ -94,7 +101,7 @@ void Camera::updateBuffer(Triangle& tr)
 
 //FIXME: remove this normal computation later
     tr.normal = crossProduct(Vector3(tr.a, tr.b), Vector3(tr.a, tr.c)).normalize();
-    if (dot(forward, tr.normal) > 0)
+    if (dot(Vector3(center_, pa).normalize(), tr.normal) > 0.)
     {
         tr.normal = tr.normal * -1;
     }
@@ -103,6 +110,12 @@ void Camera::updateBuffer(Triangle& tr)
     auto zb = distB;
     auto zc = distC;
    
+   //early exit if object is behind
+   if(za < 0  && zb < 0 && zc < 0)
+   {
+       return;
+   }
+
     auto coordA = computePointCoordinate(pa);
     auto coordB = computePointCoordinate(pb);
     auto coordC = computePointCoordinate(pc);
@@ -218,7 +231,7 @@ void Camera::fillFlat(const Point2& a,
             {
                 depthBuffer[index] = zCur;
                 frameBuffer[index] = computeColor(i, inf.y, zCur, tr);
-                
+                //frameBuffer[index] = tr.color;
             }
             if(eq.c == 0)
             {
@@ -235,13 +248,14 @@ void Camera::fillFlat(const Point2& a,
 
 Color Camera::computeColor(int x, int y, float z, const Triangle& tr)
 {
-    Vector3 vc = Vector3(center_, imagePlan[y * WIDTH + x]);
+    Vector3 vc = Vector3(center_, imagePlan[y * WIDTH + x]).normalize();
     Vector3 forward = Vector3(center_, objective_);
     float dist = z / dot(vc.normalize(), forward.normalize());
     Point3 intersect = imagePlan[y * WIDTH + x] + vc * dist;
 
     Color res = Color(0,0,0);
-    Vector3 reflected = vc.normalize() - tr.normal * 2.0 * dot(vc.normalize(), tr.normal);
+    Vector3 reflected = vc - tr.normal * 2.0 * dot(vc, tr.normal);
+    reflected = reflected.normalize();
     for(const auto& light : lights)
     {
         Color effectiveColor = light.color * tr.color;
@@ -275,7 +289,7 @@ Point3 Camera::getCoord(const Point2& p) const
 
 Point2 Camera::computePointCoordinate(const Point3& p) const
 {
-    auto hrCorner = imagePlan[0];   
+    auto hrCorner = imagePlan[0];
     auto right = Vector3(hrCorner, imagePlan[1]);
     auto rightNormalized = right.normalize();
     auto down = Vector3(hrCorner, imagePlan[WIDTH]);
