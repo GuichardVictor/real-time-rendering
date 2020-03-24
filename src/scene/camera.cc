@@ -264,9 +264,9 @@ Color Camera::computeColor(int x, int y, float z, const Triangle& tr)
     reflected = reflected.normalize();
     for(const auto& light : lights)
     {
-        Color effectiveColor = light.color * tr.color;
+        Color effectiveColor = light.color_ * tr.color;
         Color ambientColor = effectiveColor * tr.ambient;
-        Vector3 l = Vector3(intersect, light.center);
+        Vector3 l = Vector3(intersect, light.center_);
         l = l.normalize();
         float angle = dot(l, tr.normal);
         if(angle < 0.)
@@ -278,7 +278,7 @@ Color Camera::computeColor(int x, int y, float z, const Triangle& tr)
         factor = powf(factor, tr.shininess);
         if (dot(reflected, l) < 0.)
             factor = - factor;
-        Color specularColor = light.color * tr.specular * factor;
+        Color specularColor = light.color_ * tr.specular * factor;
         res = res + ((ambientColor + diffuseColor + specularColor));
     }
 
@@ -326,21 +326,24 @@ void Camera::addShadow()
             Point3 target = center_ + v * dist;
             //FIXME: handle several lights
 
-            Vector3 forwardLight = lights[0].direction.normalize();
-            Point2 p2LightIndex = lights[0].computePointCoordinate(target);
-            if(p2LightIndex.x < 0 || p2LightIndex.x >= lights[0].width ||
-               p2LightIndex.y < 0 || p2LightIndex.y >= lights[0].height)
+            Vector3 dirLight = Vector3(lights[0].center_, lights[0].objective_);
+            Vector3 forwardLight = dirLight.normalize();
+            Point3 projection = lights[0].projectPoint(target);
+            Point2 p2LightIndex = lights[0].computePointCoordinate(projection);
+            if(p2LightIndex.x < 0 || p2LightIndex.x >= lights[0].width_ ||
+               p2LightIndex.y < 0 || p2LightIndex.y >= lights[0].height_)
             {
                 continue;
             }
-            int lightIndex = p2LightIndex.y * lights[0].width + p2LightIndex.x;
+            int lightIndex = p2LightIndex.y * lights[0].width_ + p2LightIndex.x;
             Point3 imagePlanPointLight = lights[0].imagePlan[lightIndex];
-            float distCamTgtLight = Vector3(imagePlanPointLight, target).norm();
-            Vector3 vLight = Vector3(center_, imagePlanPointLight).normalize();
+            float distCamTgtLight = Vector3(lights[0].center_, target).norm();
+            Vector3 vLight = Vector3(lights[0].center_, imagePlanPointLight).normalize();
             float cosAngleLight = dot(vLight, forwardLight);
-            float distTgtLight = (lights[0].depthBuffer[lightIndex] + lights[0].zDist) / cosAngleLight;
+            float distTgtLight = (lights[0].depthBuffer[lightIndex] + lights[0].zDist_) / cosAngleLight;
 
-            if(distCamTgtLight > distTgtLight)
+
+            if(distCamTgtLight - distTgtLight > 0.5)
             {
                 frameBuffer[index] = Color(0,0,0);
             }
