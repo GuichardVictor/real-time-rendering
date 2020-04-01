@@ -7,6 +7,9 @@
 class Triangle
 {
 public:
+    Triangle()
+    : a({0,0,0}), b({0,0,0}), c({0,0,0})
+    {}
     Triangle(const Point3& _a, const Point3& _b, const Point3& _c,
              const Color& _color, float _specular = 1, float _diffuse = 1,
              float _ambient = 1, float _shininess = 10)

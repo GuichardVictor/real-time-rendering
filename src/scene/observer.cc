@@ -1,49 +1,16 @@
-#include "light.hh"
-/*
-void DirectionalLight::initBuffer()
-{
-    Vector3 v = Vector3(ce).normalize();
-    objective_ = center_+ v * zDist;
-    v = v * zDist;
+#include "observer.hh"
 
-    right_  = crossProduct(Vector3(0,1,0), v);
 
-    if(right_.x_ == 0 && right_.y_ == 0 && right_.z_ == 0)
-    {
-        right_ = crossProduct(Vector3(0,0,1), v);
-    }
-    right_ = right_.normalize();
+void Observer::initBuffer() {
 
-    Vector3 up = crossProduct(right_, v);
-    Point3 centerImage = center_ + v;
-    float wlength = this->zDist * tanf(angle_ / 2.) * 2.0;
-    float hlength = this->zDist * tanf(angle_ / 2.) * 2.0;
-    Point3 hrCorner = centerImage + right_ * (-wlength / 2.0) + up * (hlength / 2.0);
-
-    float padx = wlength / width_;
-    float pady = hlength / height_;
-    for(int j = 0; j < height_; j++)
-    {
-        for(int i = 0 ; i < width_; i++)
-        {
-            Point3 toAdd = Point3(hrCorner.x_, hrCorner.y_, hrCorner.z_);
-            toAdd = toAdd + right_ * ((padx * (float) i));
-            toAdd = toAdd + (up  * -1. * (pady  * (float) j));
-            this->imagePlan.push_back(toAdd);
-        }
-    }
-    depthBuffer = std::vector<float>(height_ * width_, std::numeric_limits<float>::max());
-    frameBuffer = std::vector<Color>(height_ * width_, Color(0,0,0));
-}*/
-void DirectionalLight::initBuffer() {
     Vector3 v = Vector3(this->center_, this->objective_);
     v = v.normalize();
     Vector3 right = crossProduct(this->up_, v);
     right = right.normalize();
     v = v * zDist_;
     Point3 centerImage = this->center_ + v;
-    float wlength = this->zDist_ * tanf(angle_/ 2.) * 2.0;
-    float hlength = this->zDist_ * tanf(angle_ / 2.) * 2.0;
+    float wlength = this->zDist_ * tanf(openAngleX_/ 2.) * 2.0;
+    float hlength = this->zDist_ * tanf(openAngleY_/ 2.) * 2.0;
     Point3 hrCorner = centerImage + right * (-wlength / 2.0) + this->up_ * (hlength / 2.0);
 
     float padx = wlength / width_;
@@ -60,9 +27,10 @@ void DirectionalLight::initBuffer() {
     }
     depthBuffer = std::vector<float>(height_ * width_, std::numeric_limits<float>::max());
     frameBuffer = std::vector<Color>(height_ * width_, Color(0,0,0));
+    triangleHit = std::vector<Triangle>(height_ * width_, Triangle());
 }
 
-Point3 DirectionalLight::projectPoint(const Point3& p) const
+Point3 Observer::projectPoint(const Point3& p) const
 {
     Vector3 v = Vector3(this->center_, p);
     Vector3 c = Vector3(this->center_, this->objective_);
@@ -84,7 +52,7 @@ Point3 DirectionalLight::projectPoint(const Point3& p) const
     return res;
 }
 
-void DirectionalLight::updateBuffer(Triangle& tr)
+void Observer::updateBuffer(Triangle& tr)
 {
     auto pa = projectPoint(tr.a);
     auto pb = projectPoint(tr.b);
@@ -177,7 +145,7 @@ void DirectionalLight::updateBuffer(Triangle& tr)
     return;
 }
 
-void DirectionalLight::fillFlat(const Point2& a,
+void Observer::fillFlat(const Point2& a,
                          const Point2& b, const Point2& c,
                          PlaneEquation& eq, bool top, const Triangle& tr)
 {
@@ -215,8 +183,16 @@ void DirectionalLight::fillFlat(const Point2& a,
             std::swap(inf, sup);
         
         float zCur = 0;
+        if(inf.x >= width_ || sup.x < 0 || inf.y < 0 || inf.y >= height_)
+        {
+            continue;
+        }
         if(eq.c != 0)
         {
+            if(inf.x < 0)
+            {
+                inf.x = 0;
+            }
             zCur = (- eq.a * (float) inf.x - eq.b * (float)inf.y - eq.d) / eq.c;
         }
         for (int i = inf.x; i <= sup.x; i++)
@@ -233,7 +209,7 @@ void DirectionalLight::fillFlat(const Point2& a,
             if(depthBuffer[index] > zCur && zCur > 0)
             {
                 depthBuffer[index] = zCur;
-                frameBuffer[index] = computeColor(i, inf.y, zCur, tr);
+                triangleHit[index] = tr;
             }
             if(eq.c == 0)
             {
@@ -247,36 +223,8 @@ void DirectionalLight::fillFlat(const Point2& a,
     }
 }
 
-Color DirectionalLight::computeColor(int x, int y, float z, const Triangle& tr)
-{
-    Vector3 vc = Vector3(center_, imagePlan[y * width_ + x]).normalize();
-    Vector3 forward = Vector3(center_, objective_);
-    float dist = z / dot(vc.normalize(), forward.normalize());
-    Point3 intersect = imagePlan[y * width_ + x] + vc * dist;
 
-    Color res = Color(0,0,0);
-    Vector3 reflected = vc - tr.normal * 2.0 * dot(vc, tr.normal);
-    reflected = reflected.normalize();
-    Color effectiveColor = color_ * tr.color;
-    Color ambientColor = effectiveColor * tr.ambient;
-    Vector3 l = Vector3(intersect, center_);
-    l = l.normalize();
-    float angle = dot(l, tr.normal);
-    if(angle < 0.)
-    {
-        return res;;
-    }
-    Color diffuseColor = effectiveColor * tr.diffuse * angle;
-    float factor = dot(reflected, l);
-    factor = powf(factor, tr.shininess);
-    if (dot(reflected, l) < 0.)
-        factor = - factor;
-    Color specularColor = color_ * tr.specular * factor;
-    res = res + ((ambientColor + diffuseColor + specularColor));
-    return res;
-}
-
-Point3 DirectionalLight::getCoord(const Point2& p) const
+Point3 Observer::getCoord(const Point2& p) const
 {
     auto down = Vector3(imagePlan[0], imagePlan[width_]);
     auto right = Vector3(imagePlan[0], imagePlan[1]);
@@ -284,7 +232,7 @@ Point3 DirectionalLight::getCoord(const Point2& p) const
     return imagePlan[0] + right * p.x + down * p.y;
 }
 
-Point2 DirectionalLight::computePointCoordinate(const Point3& p) const
+Point2 Observer::computePointCoordinate(const Point3& p) const
 {
     auto hrCorner = imagePlan[0];
     auto right = Vector3(hrCorner, imagePlan[1]);
