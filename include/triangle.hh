@@ -18,6 +18,10 @@ public:
           ambient(_ambient), shininess(_shininess)
     {}
 
+    bool operator!=(const Triangle& other) 
+    {
+        return a != other.a || b != other.b || c != other.c;
+    }
 
     Point3 a;
     Point3 b;

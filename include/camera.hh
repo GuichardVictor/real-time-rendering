@@ -27,6 +27,6 @@ public:
     void computeAllColors();
 
     void addShadow();
-
+    
     std::vector<DirectionalLight> lights;
 };
