@@ -120,7 +120,7 @@ void Camera::addShadow()
 
             if(distCamTgtLight - distTgtLight > 0.2)
             {
-                frameBuffer[index] = Color(0,0,0);
+                frameBuffer[index] = frameBuffer[index] * Color(0.2,0.2,0.2);
             }
         }
     }
