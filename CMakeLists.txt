@@ -7,6 +7,9 @@ find_package(SDL2 REQUIRED COMPONENTS SDL2::SDL2)
 add_compile_options(-Wall -Wextra -Werror -pedantic
         -I${CMAKE_SOURCE_DIR}/include/ -g -fno-stack-protector -z execstack)
 
+FIND_PACKAGE( Boost COMPONENTS program_options REQUIRED )
+
+include_directories( ${Boost_INCLUDE_DIR} )
 include_directories ("${CMAKE_SOURCE_DIR}/src/")
 include_directories ("${CMAKE_SOURCE_DIR}/include/")
 
@@ -14,5 +17,4 @@ file(GLOB_RECURSE SOURCES "src/*.cc")
 
 add_executable(rtr ${SOURCES})
 
-include_directories(rtr ${SDL2_INCLUDE_DIRS})
-target_link_libraries(rtr ${SDL2_LIBRARIES} SDL2::SDL2)
+target_link_libraries(rtr ${Boost_LIBRARIES})
