@@ -29,7 +29,7 @@ public:
 
     float getZ() const;
 
-private:
+public:
     float x_;
     float y_;
     float z_;

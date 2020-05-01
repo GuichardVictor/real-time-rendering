@@ -4,6 +4,8 @@
 
 #define PIXEL_MAX 255
 
+float clamp(float value);
+
 bool Image::save(const std::string& filename)
 {
     std::ofstream file{filename};
@@ -19,11 +21,11 @@ bool Image::save(const std::string& filename)
     {
         for (size_t w = 0; w < width; w++)
         {
-            auto pixel = pixels[h * height + w];
+            auto pixel = pixels[h * width + w];
 
-            file << std::to_string(pixel.red) << ' '
-                 << std::to_string(pixel.green) << ' '
-                 << std::to_string(pixel.blue) << ' ';
+            file << std::to_string((int)(clamp(pixel.red) * PIXEL_MAX)) << ' '
+                 << std::to_string((int)(clamp(pixel.green) * PIXEL_MAX)) << ' '
+                 << std::to_string((int)(clamp(pixel.blue) * PIXEL_MAX)) << ' ';
 
             file << " ";
         }
@@ -31,6 +33,15 @@ bool Image::save(const std::string& filename)
     }
 
     return true;
+}
+
+float clamp(float value)
+{
+    if (value < 0)
+        return 0;
+    if(value > 1)
+        return 1;
+    return value;
 }
 
 bool Image::set_pixel(size_t w, size_t h, const Color& c)

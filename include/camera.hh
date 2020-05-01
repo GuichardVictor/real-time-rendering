@@ -1,30 +1,32 @@
 #pragma once
 
 #include <vector>
-#include "point3.hh"
 #include "vector3.hh"
+#include "light.hh"
+#include "observer.hh"
 
-#define HEIGHT 100
-#define WIDTH 100
 
-class Camera {
+#define HEIGHT 500
+#define WIDTH 500
+
+
+class Camera : public Observer {
 
 public:
-    Camera(const Point3& center, const Point3& objective, const Vector3 &up, float x, float y, float z)
-    : center_(center), objective_(objective), up_(up), openFieldX_(x), openFieldY_(y), zDist_(z)
-    {}
+    Camera(const Point3& center, const Point3& objective,
+     const Vector3& globalUp, const Vector3& globalRight, float x, float y)
+    : Observer(center, objective, Vector3(0,0,0), WIDTH, HEIGHT, 1, x, y)
+    {
+        init(globalUp, globalRight);
+    }
 
-    Point3 projectPoint(const Point3& p) const;
+    void init(const Vector3& globalUp, const Vector3& globalRight);
 
-    void initPoints(int width, int height);
+    Color computeColor(int x, int y, float z, const Triangle& tr);
 
-    const Point3 &getCenter() const;
+    void computeAllColors();
 
-    Point3 center_;
-    Point3 objective_;
-    Vector3 up_;
-    float openFieldX_;
-    float openFieldY_;
-    float zDist_;
-    std::vector<Point3> imagePlan;
+    void addShadow();
+    
+    std::vector<DirectionalLight> lights;
 };

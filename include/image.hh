@@ -5,9 +5,29 @@
 
 struct Color
 {
-    uint8_t red;
-    uint8_t green;
-    uint8_t blue;
+    Color() = default;
+    Color(float r, float g, float b)
+    :red(r), green(g), blue(b)
+    {}
+
+    Color operator*(float f) const
+    {
+        return Color(red * f, green * f, blue * f);
+    }
+
+    Color operator*(const Color c) const
+    {
+        return Color(red * c.red, green * c.green, blue * c.blue);
+    }
+
+    Color operator+(const Color c) const
+    {
+        return Color(red + c.red, green + c.green, blue + c.blue);
+    }
+ 
+    float red = 0;
+    float green = 0;
+    float blue = 0;
 };
 
 class Image
@@ -20,7 +40,6 @@ public:
     bool save(const std::string& filename);
 
     bool set_pixel(size_t w, size_t h, const Color& c);
-
 
 public:
     size_t width;

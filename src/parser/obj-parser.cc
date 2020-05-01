@@ -36,11 +36,6 @@ std::vector<std::string> split(const std::string& line, char delim=' ')
 
 bool ObjParser::parse_object(std::ifstream& f)
 {
-    // Clearing previous settings
-    vertices.clear();
-    texture_vertices.clear();
-    normal_vertices.clear();
-
     // Reading line
     std::string line;
 
@@ -89,7 +84,8 @@ bool ObjParser::parse_object(std::ifstream& f)
             triangles.push_back({
                 vertices[index_1],
                 vertices[index_2],
-                vertices[index_3]
+                vertices[index_3],
+                Color(0.5,0.5,0.5)
             });
         }
     }
