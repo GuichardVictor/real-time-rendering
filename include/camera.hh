@@ -24,7 +24,7 @@ public:
 
     Color computeColor(int x, int y, float z, const Triangle& tr);
 
-    void computeAllColors();
+    void computeAllColors(bool with_antialiasing=false);
 
     void addShadow();
     

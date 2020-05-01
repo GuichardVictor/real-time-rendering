@@ -4,6 +4,15 @@
 #include "vector3.hh"
 #include "camera.hh"
 
+Color mix(Color a, Color b, float ratio)
+{
+    auto red = (1 - ratio) * a.red + ratio * b.red;
+    auto green = (1 - ratio) * a.green + ratio * b.green;
+    auto blue = (1 - ratio) * a.blue + ratio * b.blue;
+
+    return Color(red, green, blue);
+}
+
 void Camera::init(const Vector3& globalUp, const Vector3& globalRight)
 {
     zDist_ = Vector3(center_, objective_).norm();
@@ -68,16 +77,41 @@ Color Camera::computeColor(int x, int y, float z, const Triangle& tr)
     return res;
 }
 
-void Camera::computeAllColors()
+void Camera::computeAllColors(bool with_antialiasing)
 {
+    float inf = std::numeric_limits<float>::max();
     for(int j = 0; j < HEIGHT; j++)
     {
         for(int i = 0; i < WIDTH; i++)
         {
             int index = j * WIDTH + i;
-            if(depthBuffer[index] != std::numeric_limits<float>::max())
+            if(depthBuffer[index] != inf)
             {
-                frameBuffer[index] = computeColor(i, j, depthBuffer[index], triangleHit[index]);
+                if (!with_antialiasing)
+                {
+                    frameBuffer[index] = computeColor(i, j, depthBuffer[index], triangleHit[index]);
+                    continue;
+                }
+
+                int prev = j * WIDTH + (i - 1);
+                int next = j * WIDTH + (i + 1);
+                int top = (j - 1) * WIDTH + i;
+                int bot = (j + 1) * WIDTH + i;
+
+                auto prev_c = frameBuffer[prev];
+                Color next_c;
+                if (depthBuffer[next] != inf)
+                    next_c = computeColor(i, j, depthBuffer[next], triangleHit[next]);
+                auto top_c = frameBuffer[top];
+                Color bot_c;
+                if (depthBuffer[bot] != inf)
+                    bot_c = computeColor(i, j, depthBuffer[bot], triangleHit[bot]);
+
+                auto row_c = mix(prev_c, next_c, 0.5);
+                auto col_c = mix(top_c, bot_c, 0.5);
+                auto avg_c = mix(row_c, col_c, 0.5);
+
+                frameBuffer[index] = mix(frameBuffer[index], avg_c, 0.6);
             }
         }
     }
