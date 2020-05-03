@@ -37,10 +37,11 @@ void renderSpecificScene(std::vector<Triangle>& objects, bool debug)
     Vector3 globalUp = Vector3(0,1,0);
     Vector3 globalRight = Vector3(1,0,0);
 
-    Camera c = Camera(Point3(1.5,1.5,2.5), Point3(1.4,1.5,2.4), globalUp, globalRight, 2.04, 2.04);
+    Camera c = Camera(Point3(1.5,1.5,2.5), Point3(1.4,1.5,2.4), globalUp, globalRight, 2.04, 2.04, 0.14);
+    //Camera c = Camera({2.5,1.5, 2.5}, {2.4,1.5,2.4}, globalUp, globalRight , 2.04, 2.04,0.14);
     std::vector<DirectionalLight> lights;
     lights.push_back(DirectionalLight(Color(1,1,1), {2.5,1.5, 2.5}, {2.4,1.5,2.4},
-                                      Vector3(0,1,0), 2.04, WIDTH, HEIGHT));
+                                      Vector3(0,1,0), 2.04, WIDTH, HEIGHT,0.14));
     c.initBuffer();
     c.lights = lights;
     Image img(WIDTH, HEIGHT);
@@ -53,8 +54,11 @@ void renderSpecificScene(std::vector<Triangle>& objects, bool debug)
     {
         c.lights[0].updateBuffer(obj);
     }
+    c.lights[0].computeAllColors();
     c.computeAllColors();
     c.addShadow();
+    img.pixels = c.lights[0].frameBuffer;
+    img.save("testLight.ppm");
     img.pixels = c.frameBuffer;
     img.save("test.ppm");
 }

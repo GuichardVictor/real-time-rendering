@@ -4,8 +4,8 @@
 void Observer::initBuffer() {
 
     Vector3 v = Vector3(this->center_, this->objective_);
-    v = v.normalize();
     Vector3 right = crossProduct(this->up_, v);
+    v = v.normalize();
     right = right.normalize();
     v = v * zDist_;
     Point3 centerImage = this->center_ + v;
