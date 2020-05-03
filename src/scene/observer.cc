@@ -67,11 +67,11 @@ void Observer::updateBuffer(Triangle& tr)
     vec = Vector3(center_, tr.c);
     float distC = vec.norm() * dot(vec.normalize(), forward);
 
-//FIXME: remove this normal computation later
+//backface culling
     tr.normal = crossProduct(Vector3(tr.a, tr.b), Vector3(tr.a, tr.c)).normalize();
     if (dot(Vector3(center_, pa).normalize(), tr.normal) > 0.)
     {
-        tr.normal = tr.normal * -1;
+        return;
     }
 
     auto za = distA;

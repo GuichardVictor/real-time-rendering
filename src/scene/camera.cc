@@ -107,11 +107,13 @@ void Camera::addShadow()
 
             float angle = acos(dot(forwardLight, Vector3(lights[0].center_, projection).normalize()));
             if(p2LightIndex.x < 0 || p2LightIndex.x >= lights[0].width_ ||
-               p2LightIndex.y < 0 || p2LightIndex.y >= lights[0].height_|| angle > lights[0].openAngleX_)
+               p2LightIndex.y < 0 || p2LightIndex.y >= lights[0].height_)
             {
-                
-                frameBuffer[index] = frameBuffer[index] * Color(0,0,0);
                 continue;
+            }
+            if( angle > lights[0].openAngleX_)
+            {
+                frameBuffer[index] = frameBuffer[index] * Color(0,0,0);
             }
             int lightIndex = p2LightIndex.y * lights[0].width_ + p2LightIndex.x;
             Point3 imagePlanPointLight = lights[0].imagePlan[lightIndex];
