@@ -1,10 +1,16 @@
 #include "observer.hh"
 
+void Observer::initObserver()
+{
+    initBuffer();
+    initFrustum();
+}
 
 void Observer::initBuffer() {
 
     Vector3 v = Vector3(this->center_, this->objective_);
     //FIXME we might have done it the wrong way
+    //Vector3 right = crossProduct(v, this->up_);
     Vector3 right = crossProduct(this->up_, v);
     v = v.normalize();
     right = right.normalize();
@@ -39,39 +45,39 @@ void Observer::initFrustum()
     Vector3 forward  = Vector3(center_, objective_);
     Vector3 right = crossProduct(forward, up_);
     right = right.normalize();
-    Point3 centerImage = this->center_ + forward;
+    Point3 centerImage = this->center_ + (forward.normalize() * zDist_);
     float wlength = this->zDist_ * tanf(openAngleX_/ 2.) * 2.0;
     float hlength = this->zDist_ * tanf(openAngleY_/ 2.) * 2.0;
 
     //left plane
     Point3 firstPoint = centerImage + right * (-wlength / 2.0);
     Point3 secondPoint = firstPoint +  (up_ * -1);
-    Vector3 normal = crossProduct(Vector3(center_, firstPoint), Vector3(firstPoint, secondPoint));
+    Vector3 normal = crossProduct(Vector3(center_, firstPoint), Vector3(firstPoint, secondPoint)).normalize();
     frustum.push_back(Plane(firstPoint, normal));
 
     //right plane
     firstPoint = centerImage + right * (wlength / 2.0);
     secondPoint = firstPoint +  (up_ * -1);
-    normal = crossProduct(Vector3(center_, firstPoint), Vector3(firstPoint, secondPoint));
+    normal = crossProduct(Vector3(center_, firstPoint), Vector3(firstPoint, secondPoint)).normalize();
     frustum.push_back(Plane(firstPoint, normal));
     
     //up plane
     firstPoint = centerImage + this->up_ * (hlength / 2.0);
     secondPoint = firstPoint +  (right * -1);
-    normal = crossProduct(Vector3(center_, firstPoint), Vector3(firstPoint, secondPoint));
+    normal = crossProduct(Vector3(center_, firstPoint), Vector3(firstPoint, secondPoint)).normalize();
     frustum.push_back(Plane(firstPoint, normal));
 
     //down plane
     firstPoint = centerImage + this->up_ * (-hlength / 2.0);
     secondPoint = firstPoint +  (right * -1);
-    normal = crossProduct(Vector3(center_, firstPoint), Vector3(firstPoint, secondPoint));
+    normal = crossProduct(Vector3(center_, firstPoint), Vector3(firstPoint, secondPoint)).normalize();
     frustum.push_back(Plane(firstPoint, normal));
 
     //image plane
     firstPoint = imagePlan[1];
     secondPoint = imagePlan[0];
     Point3 thirdPoint = imagePlan[width_];
-    normal = crossProduct(Vector3(firstPoint, secondPoint), Vector3(firstPoint, thirdPoint));
+    normal = crossProduct(Vector3(firstPoint, secondPoint), Vector3(firstPoint, thirdPoint)).normalize();
     frustum.push_back(Plane(firstPoint, normal));
 }
 
@@ -102,12 +108,14 @@ bool Observer::isFrustumCulled(const Triangle& tr)
     Point3 triangleCenter = Point3((tr.a.x_ + tr.b.x_ + tr.c.x_)/3.,
                                    (tr.a.y_ + tr.b.y_ + tr.c.y_)/3.,
                                    (tr.a.z_ + tr.b.z_ + tr.c.z_)/3.);
+    //Point3 triangleCenter = tr.a;
     float radius = std::max(Vector3(triangleCenter, tr.a).norm(),
                        Vector3(triangleCenter, tr.b).norm());
     radius = std::max(radius, Vector3(triangleCenter, tr.c).norm());
-    for(const auto plane : frustum)
+    for(const auto& plane : frustum)
     {
-        if(dot(plane.normal, Vector3(plane.center, triangleCenter)) - radius > 0)
+        float angle = dot(plane.normal, Vector3(plane.center, triangleCenter)); 
+        if(angle - radius > 0)
         {
             return true;
         }
@@ -151,7 +159,7 @@ void Observer::updateBuffer(Triangle& tr)
     //frustum culling
     if(isFrustumCulled(tr))
     {
-        return;
+        //return;
     }
 
     auto coordA = computePointCoordinate(pa);

@@ -24,7 +24,7 @@ Vector3 globalRight = Vector3(1,0,0);
 
 std::vector<DirectionalLight> lights;
 
-Camera c = Camera(Point3(1.5,1.5,2.5), Point3(1.4,1.5,2.4), globalUp, globalRight, 2.04, 2.04, 0.14);
+Camera c = Camera(Point3(0,0,1), Point3(0,0,0), globalUp, globalRight, 2.04, 2.04, 0.14);
 
 bool init_done = false;
 
@@ -63,9 +63,9 @@ void handle_key(unsigned char key, int x, int y)
     obj.z_ += z_translation;
 
     c = Camera(pos, obj, globalUp, globalRight, 2.04, 2.04, 0.14);
-    c.initBuffer();
+    c.initObserver();
     c.lights = lights;
-    c.lights[0].initBuffer();
+    c.lights[0].initObserver();
 
     glutPostRedisplay();
 }
@@ -93,7 +93,7 @@ void renderScene(Camera& c, std::vector<Triangle>& objects, bool debug)
     if(debug)
         debug = true;
 
-    c.initBuffer();
+    c.initObserver();
     c.lights = lights;
     Image img(WIDTH, HEIGHT);
     for(auto& obj : objects)
@@ -107,7 +107,7 @@ void renderScene(Camera& c, std::vector<Triangle>& objects, bool debug)
     c.lights[0].computeAllColors();
     c.computeAllColors();
     c.addShadow();
-    
+
     if (!init_done)
     {
         img.pixels = c.frameBuffer;
@@ -117,8 +117,6 @@ void renderScene(Camera& c, std::vector<Triangle>& objects, bool debug)
 }
 void display()
 {
-
-
     renderScene(c, objs.triangles, false);
 
     auto buffer = c.frameBuffer;
@@ -190,9 +188,9 @@ int main(int argc, char* argv[])
     lights.push_back(DirectionalLight(Color(1,1,1), {2.5,1.5, 2.5}, {2.4,1.5,2.4},
                                       Vector3(0,1,0), 2.04, WIDTH, HEIGHT, 0.14));
 
-    c.initBuffer();
+    c.initObserver();
     c.lights = lights;
-    c.lights[0].initBuffer();
+    c.lights[0].initObserver();
 
     init_glut(argc, argv);
     init_glew();

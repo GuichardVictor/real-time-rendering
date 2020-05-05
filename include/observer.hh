@@ -19,6 +19,8 @@ public:
 
     void initFrustum();
 
+    void initObserver();
+
     Point3 projectPoint(const Point3& p) const;
 
     void updateBuffer(Triangle &tr);
