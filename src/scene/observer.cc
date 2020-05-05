@@ -158,14 +158,12 @@ void Observer::updateBuffer(Triangle& tr)
    //frustum culling first part
    if(za < 0  && zb < 0 && zc < 0)
    {
-        std::cout << "triangle culled\n";
        return;
    }
 
     //frustum culling
     if(isFrustumCulled(tr))
     {
-        std::cout << "triangle culled\n";
         return;
     }
 
