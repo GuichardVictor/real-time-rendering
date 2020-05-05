@@ -2,6 +2,7 @@
 
 #include "triangle.hh"
 #include "Point2.hh"
+#include "plane.hh"
 #include "PlaneEquation.hh"
 
 class Observer
@@ -16,12 +17,15 @@ public:
 
     void initBuffer();
 
+    void initFrustum();
+
     Point3 projectPoint(const Point3& p) const;
 
     void updateBuffer(Triangle &tr);
     
     Point3 getCoord(const Point2& p) const;
 
+    bool isFrustumCulled(const Triangle& tr);
 
     void fillFlat(const Point2&a , const Point2& b,
                                    const Point2& c, PlaneEquation& eq,
@@ -38,6 +42,7 @@ public:
     float openAngleX_;
     float openAngleY_;
 
+    std::vector<Plane> frustum;
     std::vector<Point3> imagePlan;
     std::vector<float> depthBuffer;
     std::vector<Color> frameBuffer;
