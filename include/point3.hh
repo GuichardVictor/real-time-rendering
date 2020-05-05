@@ -18,7 +18,7 @@ public:
 
     Point3 operator+ (const Vector3& v) const;
 
-    bool operator!= (const Point3& p)
+    bool operator!= (const Point3& p) const
     {
         return this->x_ != p.x_ || this->y_ != p.y_ || this->z_ != p.z_;
     }

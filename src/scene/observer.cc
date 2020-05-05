@@ -57,7 +57,7 @@ void Observer::initFrustum()
 
     //right plane
     firstPoint = centerImage + right * (wlength / 2.0);
-    secondPoint = firstPoint +  (up_ * -1);
+    secondPoint = firstPoint +  (up_ * 1);
     normal = crossProduct(Vector3(center_, firstPoint), Vector3(firstPoint, secondPoint)).normalize();
     frustum.push_back(Plane(firstPoint, normal));
     
@@ -69,7 +69,7 @@ void Observer::initFrustum()
 
     //down plane
     firstPoint = centerImage + this->up_ * (-hlength / 2.0);
-    secondPoint = firstPoint +  (right * -1);
+    secondPoint = firstPoint +  (right * 1);
     normal = crossProduct(Vector3(center_, firstPoint), Vector3(firstPoint, secondPoint)).normalize();
     frustum.push_back(Plane(firstPoint, normal));
 
@@ -78,12 +78,16 @@ void Observer::initFrustum()
     secondPoint = imagePlan[0];
     Point3 thirdPoint = imagePlan[width_];
     normal = crossProduct(Vector3(firstPoint, secondPoint), Vector3(firstPoint, thirdPoint)).normalize();
-    frustum.push_back(Plane(firstPoint, normal));
+    frustum.push_back(Plane(firstPoint, normal * -1));
 }
 
 Point3 Observer::projectPoint(const Point3& p) const
 {
     Vector3 v = Vector3(this->center_, p);
+    if(!(center_ != p))
+    {
+        return imagePlan[width_ * (height_/2) +width_/2];
+    }
     Vector3 c = Vector3(this->center_, this->objective_);
     Vector3 nv = v.normalize();
     float cosAngle = dot(c.normalize(), nv);
@@ -108,13 +112,14 @@ bool Observer::isFrustumCulled(const Triangle& tr)
     Point3 triangleCenter = Point3((tr.a.x_ + tr.b.x_ + tr.c.x_)/3.,
                                    (tr.a.y_ + tr.b.y_ + tr.c.y_)/3.,
                                    (tr.a.z_ + tr.b.z_ + tr.c.z_)/3.);
-    //Point3 triangleCenter = tr.a;
     float radius = std::max(Vector3(triangleCenter, tr.a).norm(),
                        Vector3(triangleCenter, tr.b).norm());
     radius = std::max(radius, Vector3(triangleCenter, tr.c).norm());
+    radius = radius * 1.2;
     for(const auto& plane : frustum)
     {
-        float angle = dot(plane.normal, Vector3(plane.center, triangleCenter)); 
+        Vector3 v = Vector3(plane.center, triangleCenter); 
+        float angle = dot(plane.normal, v); 
         if(angle - radius > 0)
         {
             return true;
@@ -150,16 +155,18 @@ void Observer::updateBuffer(Triangle& tr)
     auto zb = distB;
     auto zc = distC;
    
-   /*//early exit if object is behind
+   //frustum culling first part
    if(za < 0  && zb < 0 && zc < 0)
    {
+        std::cout << "triangle culled\n";
        return;
-   }*/
+   }
 
     //frustum culling
     if(isFrustumCulled(tr))
     {
-        //return;
+        std::cout << "triangle culled\n";
+        return;
     }
 
     auto coordA = computePointCoordinate(pa);

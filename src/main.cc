@@ -24,7 +24,7 @@ Vector3 globalRight = Vector3(1,0,0);
 
 std::vector<DirectionalLight> lights;
 
-Camera c = Camera(Point3(0,0,1), Point3(0,0,0), globalUp, globalRight, 2.04, 2.04, 0.14);
+Camera c = Camera(Point3(1.5,2.5,1.5), Point3(1.4,2.5,1.5), globalUp, globalRight, 2.04, 2.04, 0.14);
 
 bool init_done = false;
 
