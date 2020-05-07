@@ -24,6 +24,18 @@ struct Color
     {
         return Color(red + c.red, green + c.green, blue + c.blue);
     }
+
+    void clamp()
+    {
+        red = (red > 1) ? 1 : red;
+        red = (red < 0) ? 0 : red;
+
+        green = (green > 1) ? 1 : green;
+        green = (green < 0) ? 0 : green;
+
+        blue = (blue > 1) ? 1 : blue;
+        blue = (blue < 0) ? 0 : blue;
+    }
  
     float red = 0;
     float green = 0;

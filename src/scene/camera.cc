@@ -6,7 +6,6 @@
 
 void Camera::init(const Vector3& globalUp, const Vector3& globalRight)
 {
-    zDist_ = Vector3(center_, objective_).norm();
     Vector3 forward = Vector3(center_, objective_).normalize();
     Vector3 globalRef = globalUp.normalize();
     float cosAngle = dot(globalRef, forward);
@@ -105,10 +104,16 @@ void Camera::addShadow()
             Vector3 forwardLight = dirLight.normalize();
             Point3 projection = lights[0].projectPoint(target);
             Point2 p2LightIndex = lights[0].computePointCoordinate(projection);
+
+            float angle = acos(dot(forwardLight, Vector3(lights[0].center_, projection).normalize()));
             if(p2LightIndex.x < 0 || p2LightIndex.x >= lights[0].width_ ||
                p2LightIndex.y < 0 || p2LightIndex.y >= lights[0].height_)
             {
                 continue;
+            }
+            if( angle > lights[0].openAngleX_)
+            {
+                frameBuffer[index] = frameBuffer[index] * Color(0,0,0);
             }
             int lightIndex = p2LightIndex.y * lights[0].width_ + p2LightIndex.x;
             Point3 imagePlanPointLight = lights[0].imagePlan[lightIndex];
@@ -118,7 +123,7 @@ void Camera::addShadow()
             float distTgtLight = (lights[0].depthBuffer[lightIndex] + lights[0].zDist_) / cosAngleLight;
 
 
-            if(distCamTgtLight - distTgtLight > 0.2)
+            if(distCamTgtLight - distTgtLight > 1)
             {
                 frameBuffer[index] = frameBuffer[index] * Color(0.2,0.2,0.2);
             }

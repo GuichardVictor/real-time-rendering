@@ -1,11 +1,18 @@
 #include "observer.hh"
 
+void Observer::initObserver()
+{
+    initBuffer();
+    initFrustum();
+}
 
 void Observer::initBuffer() {
 
     Vector3 v = Vector3(this->center_, this->objective_);
-    v = v.normalize();
+    //FIXME we might have done it the wrong way
+    //Vector3 right = crossProduct(v, this->up_);
     Vector3 right = crossProduct(this->up_, v);
+    v = v.normalize();
     right = right.normalize();
     v = v * zDist_;
     Point3 centerImage = this->center_ + v;
@@ -30,9 +37,57 @@ void Observer::initBuffer() {
     triangleHit = std::vector<Triangle>(height_ * width_, Triangle());
 }
 
+
+void Observer::initFrustum()
+{
+    // init planes to compute frustum
+
+    Vector3 forward  = Vector3(center_, objective_);
+    Vector3 right = crossProduct(forward, up_);
+    right = right.normalize();
+    Point3 centerImage = this->center_ + (forward.normalize() * zDist_);
+    float wlength = this->zDist_ * tanf(openAngleX_/ 2.) * 2.0;
+    float hlength = this->zDist_ * tanf(openAngleY_/ 2.) * 2.0;
+
+    //left plane
+    Point3 firstPoint = centerImage + right * (-wlength / 2.0);
+    Point3 secondPoint = firstPoint +  (up_ * -1);
+    Vector3 normal = crossProduct(Vector3(center_, firstPoint), Vector3(firstPoint, secondPoint)).normalize();
+    frustum.push_back(Plane(firstPoint, normal));
+
+    //right plane
+    firstPoint = centerImage + right * (wlength / 2.0);
+    secondPoint = firstPoint +  (up_ * 1);
+    normal = crossProduct(Vector3(center_, firstPoint), Vector3(firstPoint, secondPoint)).normalize();
+    frustum.push_back(Plane(firstPoint, normal));
+    
+    //up plane
+    firstPoint = centerImage + this->up_ * (hlength / 2.0);
+    secondPoint = firstPoint +  (right * -1);
+    normal = crossProduct(Vector3(center_, firstPoint), Vector3(firstPoint, secondPoint)).normalize();
+    frustum.push_back(Plane(firstPoint, normal));
+
+    //down plane
+    firstPoint = centerImage + this->up_ * (-hlength / 2.0);
+    secondPoint = firstPoint +  (right * 1);
+    normal = crossProduct(Vector3(center_, firstPoint), Vector3(firstPoint, secondPoint)).normalize();
+    frustum.push_back(Plane(firstPoint, normal));
+
+    //image plane
+    firstPoint = imagePlan[1];
+    secondPoint = imagePlan[0];
+    Point3 thirdPoint = imagePlan[width_];
+    normal = crossProduct(Vector3(firstPoint, secondPoint), Vector3(firstPoint, thirdPoint)).normalize();
+    frustum.push_back(Plane(firstPoint, normal * -1));
+}
+
 Point3 Observer::projectPoint(const Point3& p) const
 {
     Vector3 v = Vector3(this->center_, p);
+    if(!(center_ != p))
+    {
+        return imagePlan[width_ * (height_/2) +width_/2];
+    }
     Vector3 c = Vector3(this->center_, this->objective_);
     Vector3 nv = v.normalize();
     float cosAngle = dot(c.normalize(), nv);
@@ -52,6 +107,28 @@ Point3 Observer::projectPoint(const Point3& p) const
     return res;
 }
 
+bool Observer::isFrustumCulled(const Triangle& tr)
+{
+    Point3 triangleCenter = Point3((tr.a.x_ + tr.b.x_ + tr.c.x_)/3.,
+                                   (tr.a.y_ + tr.b.y_ + tr.c.y_)/3.,
+                                   (tr.a.z_ + tr.b.z_ + tr.c.z_)/3.);
+    float radius = std::max(Vector3(triangleCenter, tr.a).norm(),
+                       Vector3(triangleCenter, tr.b).norm());
+    radius = std::max(radius, Vector3(triangleCenter, tr.c).norm());
+    radius = radius * 1.2;
+    for(const auto& plane : frustum)
+    {
+        Vector3 v = Vector3(plane.center, triangleCenter); 
+        float angle = dot(plane.normal, v); 
+        if(angle - radius > 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void Observer::updateBuffer(Triangle& tr)
 {
     auto pa = projectPoint(tr.a);
@@ -67,22 +144,28 @@ void Observer::updateBuffer(Triangle& tr)
     vec = Vector3(center_, tr.c);
     float distC = vec.norm() * dot(vec.normalize(), forward);
 
-//FIXME: remove this normal computation later
+//backface culling
     tr.normal = crossProduct(Vector3(tr.a, tr.b), Vector3(tr.a, tr.c)).normalize();
     if (dot(Vector3(center_, pa).normalize(), tr.normal) > 0.)
     {
-        tr.normal = tr.normal * -1;
+        return;
     }
 
     auto za = distA;
     auto zb = distB;
     auto zc = distC;
    
-   //early exit if object is behind
+   //frustum culling first part
    if(za < 0  && zb < 0 && zc < 0)
    {
        return;
    }
+
+    //frustum culling
+    if(isFrustumCulled(tr))
+    {
+        return;
+    }
 
     auto coordA = computePointCoordinate(pa);
     auto coordB = computePointCoordinate(pb);
@@ -144,6 +227,8 @@ void Observer::updateBuffer(Triangle& tr)
     
     return;
 }
+
+
 
 void Observer::fillFlat(const Point2& a,
                          const Point2& b, const Point2& c,

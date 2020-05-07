@@ -24,11 +24,16 @@ class DirectionalLight : public Observer
 {
     public:
     DirectionalLight(const Color& _color, const Point3& _center,
-                     const Point3& _objective, const Vector3& _up, float _angle, int _width, int _height)
-    : Observer(_center, _objective, _up, _width, _height, 1, _angle, _angle)
+                     const Point3& _objective, const Vector3& _up,
+                     float _angle, int _width, int _height, float zDist)
+    : Observer(_center, _objective, _up, _width, _height, zDist, _angle, _angle)
     {
         color_ = _color;
     }
+
+    Color computeColor(int x, int y, float z, const Triangle& tr);
+
+    void computeAllColors();
     
     Color color_;
 };
