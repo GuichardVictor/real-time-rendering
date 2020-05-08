@@ -101,13 +101,17 @@ void Camera::computeAllColors(bool with_antialiasing)
                 int top = (j - 1) * WIDTH + i;
                 int bot = (j + 1) * WIDTH + i;
 
-                auto prev_c = frameBuffer[prev];
+                Color prev_c;
+                if (prev >= 0)
+                    prev_c = frameBuffer[prev];
                 Color next_c;
-                if (depthBuffer[next] != inf)
+                if (next < WIDTH && depthBuffer[next] != inf)
                     next_c = computeColor(i, j, depthBuffer[next], triangleHit[next]);
-                auto top_c = frameBuffer[top];
+                Color top_c;
+                if (top >= 0)
+                    top_c = frameBuffer[top];
                 Color bot_c;
-                if (depthBuffer[bot] != inf)
+                if (bot < HEIGHT && depthBuffer[bot] != inf)
                     bot_c = computeColor(i, j, depthBuffer[bot], triangleHit[bot]);
 
                 auto row_c = mix(prev_c, next_c, 0.5);
