@@ -86,9 +86,9 @@ void Camera::computeAllColors(bool with_antialiasing)
             int index = j * WIDTH + i;
             if(depthBuffer[index] != inf)
             {
+                frameBuffer[index] = computeColor(i, j, depthBuffer[index], triangleHit[index]);
                 if (!with_antialiasing)
                 {
-                    frameBuffer[index] = computeColor(i, j, depthBuffer[index], triangleHit[index]);
                     continue;
                 }
 
@@ -110,7 +110,7 @@ void Camera::computeAllColors(bool with_antialiasing)
                 auto col_c = mix(top_c, bot_c, 0.5);
                 auto avg_c = mix(row_c, col_c, 0.5);
 
-                frameBuffer[index] = mix(frameBuffer[index], avg_c, 0.6);
+                frameBuffer[index] = mix(frameBuffer[index], avg_c, 0.3);
             }
         }
     }
