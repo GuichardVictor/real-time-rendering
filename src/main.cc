@@ -108,7 +108,7 @@ void renderScene(Camera& c, std::vector<Triangle>& objects)
     }
     c.lights[0].computeAllColors();
 
-    c.computeAllColors();
+    c.computeAllColors(OPTIONS.count("with-aa") != 0);
     if (OPTIONS.count("with-shadow") != 0)
         c.addShadow();
 
