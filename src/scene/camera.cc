@@ -179,10 +179,11 @@ void Camera::addShadow()
             float distTgtLight = (lights[0].depthBuffer[lightIndex] + lights[0].zDist_) / cosAngleLight;
 
 
-            if(distCamTgtLight - distTgtLight > 1)
+            if(lights[0].triangleHit[lightIndex] != triangleHit[index] && distCamTgtLight - distTgtLight > 1)
             {
                 frameBuffer[index] = frameBuffer[index] * Color(0.2,0.2,0.2);
             }
+
         }
     }
 }
