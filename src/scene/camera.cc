@@ -4,6 +4,10 @@
 #include "vector3.hh"
 #include "camera.hh"
 
+
+int Camera::HEIGHT = 500;
+int Camera::WIDTH = 500;
+
 Color mix(Color a, Color b, float ratio)
 {
     auto red = (1 - ratio) * a.red + ratio * b.red;

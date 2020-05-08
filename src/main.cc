@@ -76,7 +76,7 @@ void handle_key(unsigned char key, int x, int y)
 
 unsigned char* color_to_char(std::vector<Color>& cols)
 {
-    unsigned char* frame = new unsigned char[HEIGHT * WIDTH * 3];
+    unsigned char* frame = new unsigned char[Camera::HEIGHT * Camera::WIDTH * 3];
     
     int i = 0;
     for (auto it = cols.rbegin(); it != cols.rend(); it++)
@@ -122,7 +122,7 @@ void renderScene(Camera& c, std::vector<Triangle>& objects)
 
     if (!init_done)
     {
-        Image img(WIDTH, HEIGHT);
+        Image img(Camera::WIDTH, Camera::HEIGHT);
         img.pixels = c.frameBuffer;
         img.save("test.ppm");
     }
@@ -136,7 +136,7 @@ void display()
     auto pixels = color_to_char(buffer);
 
     program->use();
-    texture->update(HEIGHT, WIDTH, pixels);
+    texture->update(Camera::HEIGHT, Camera::WIDTH, pixels);
 
     if (!init_done)
     {
@@ -164,7 +164,7 @@ void init_glut(int& argc, char* argv[])
   glutInitContextVersion(4,5);
   glutInitContextProfile(GLUT_CORE_PROFILE | GLUT_DEBUG);
   glutInitDisplayMode(GLUT_RGBA|GLUT_DOUBLE|GLUT_DEPTH);
-  glutInitWindowSize(WIDTH, HEIGHT);
+  glutInitWindowSize(Camera::WIDTH, Camera::HEIGHT);
   glutInitWindowPosition ( 100, 100 );
   glutCreateWindow("Shader Programming");
   glutDisplayFunc(display);
@@ -194,14 +194,20 @@ int main(int argc, char* argv[])
 {
     OPTIONS = parse_option(argc, argv);
 
+    if (OPTIONS.count("width"))
+        Camera::WIDTH = OPTIONS["width"].as<int>();
+    if (OPTIONS.count("height"))
+        Camera::HEIGHT = OPTIONS["height"].as<int>();
+
     auto ret = objs.parse(OPTIONS["obj-file"].as<std::string>());
     if (!ret)
     {
         std::cout << "something went wrong\n";
+        return 1;
     }
 
     lights.push_back(DirectionalLight(Color(1,1,1), {2.5,1.5, 2.5}, {2.4,1.5,2.4},
-                                      Vector3(0,1,0), 2.04, WIDTH, HEIGHT, 0.14));
+                                      Vector3(0,1,0), 2.04, Camera::WIDTH, Camera::HEIGHT, 0.14));
 
     auto position = Point3(1.5, 1.5, 2.5);
     auto objective = Point3(1.4, 1.5, 2.4);
