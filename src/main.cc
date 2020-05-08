@@ -5,6 +5,7 @@
 #include "camera.hh"
 #include "triangle.hh"
 #include "obj-parser.hh"
+#include "options.hh"
 
 #include "program.hh"
 #include "shader.hh"
@@ -18,6 +19,8 @@
 #include <GL/freeglut.h>
 
 #include <iostream>
+
+boost::program_options::variables_map OPTIONS;
 
 Vector3 globalUp = Vector3(0,1,0);
 Vector3 globalRight = Vector3(1,0,0);
@@ -88,14 +91,13 @@ unsigned char* color_to_char(std::vector<Color>& cols)
     return frame;
 }
 
-void renderScene(Camera& c, std::vector<Triangle>& objects, bool debug)
+void renderScene(Camera& c, std::vector<Triangle>& objects)
 {
-    if(debug)
-        debug = true;
+    auto start = std::chrono::high_resolution_clock::now();
 
     c.initObserver();
     c.lights = lights;
-    Image img(WIDTH, HEIGHT);
+
     for(auto& obj : objects)
     {
         c.updateBuffer(obj);
@@ -105,11 +107,22 @@ void renderScene(Camera& c, std::vector<Triangle>& objects, bool debug)
         c.lights[0].updateBuffer(obj);
     }
     c.lights[0].computeAllColors();
+
     c.computeAllColors();
-    c.addShadow();
+    if (OPTIONS.count("with-shadow") != 0)
+        c.addShadow();
+
+
+    if (OPTIONS.count("time") != 0)
+    {
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        std::cout << "[FRAME][time] " << duration_ms.count() << " ms" << std::endl;
+    }
 
     if (!init_done)
     {
+        Image img(WIDTH, HEIGHT);
         img.pixels = c.frameBuffer;
         img.save("test.ppm");
     }
@@ -117,7 +130,7 @@ void renderScene(Camera& c, std::vector<Triangle>& objects, bool debug)
 }
 void display()
 {
-    renderScene(c, objs.triangles, false);
+    renderScene(c, objs.triangles);
 
     auto buffer = c.frameBuffer;
     auto pixels = color_to_char(buffer);
@@ -179,28 +192,40 @@ void init_GL() {
 
 int main(int argc, char* argv[])
 {
-    if(argc != 2)
+    OPTIONS = parse_option(argc, argv);
+
+    auto ret = objs.parse(OPTIONS["obj-file"].as<std::string>());
+    if (!ret)
     {
-        std::cerr << "usage : "<< argv[0] << "obj file\n";
-        return 1;
+        std::cout << "something went wrong\n";
     }
 
     lights.push_back(DirectionalLight(Color(1,1,1), {2.5,1.5, 2.5}, {2.4,1.5,2.4},
                                       Vector3(0,1,0), 2.04, WIDTH, HEIGHT, 0.14));
 
-    c.initObserver();
+    auto position = Point3(1.5, 1.5, 2.5);
+    auto objective = Point3(1.4, 1.5, 2.4);
+    if (OPTIONS.count("camera-pos"))
+        position = OPTIONS["camera-pos"].as<Point3>();
+    if (OPTIONS.count("camera-dir"))
+        objective = OPTIONS["camera-dir"].as<Point3>();
+
+    c = Camera(position, objective, globalUp, globalRight, 2.04, 2.04, 0.14);
+
+    c.initBuffer();
     c.lights = lights;
-    c.lights[0].initObserver();
+    c.lights[0].initBuffer();
+
+    if (OPTIONS.count("glut") == 0)
+    {
+        renderScene(c, objs.triangles);
+        return 0;
+    }
 
     init_glut(argc, argv);
     init_glew();
     init_GL();
 
-    auto ret = objs.parse(argv[1]);
-    if (!ret)
-    {
-        std::cout << "something went wrong\n";
-    }
 
     auto gui_vertex = Shader("../src/shaders/gui_vertex.shd", GL_VERTEX_SHADER);
     auto gui_fragment = Shader("../src/shaders/gui_fragment.shd", GL_FRAGMENT_SHADER);
