@@ -10,9 +10,9 @@ int Camera::WIDTH = 500;
 
 Color mix(Color a, Color b, float ratio)
 {
-    auto red = (1 - ratio) * a.red + ratio * b.red;
+    auto red =   (1 - ratio) * a.red   + ratio * b.red;
     auto green = (1 - ratio) * a.green + ratio * b.green;
-    auto blue = (1 - ratio) * a.blue + ratio * b.blue;
+    auto blue =  (1 - ratio) * a.blue  + ratio * b.blue;
 
     return Color(red, green, blue);
 }
@@ -88,38 +88,52 @@ void Camera::computeAllColors(bool with_antialiasing)
         for(int i = 0; i < WIDTH; i++)
         {
             int index = j * WIDTH + i;
+            frameBuffer[index] = Color(0.0, 0.0, 0.0);
             if(depthBuffer[index] != inf)
             {
                 frameBuffer[index] = computeColor(i, j, depthBuffer[index], triangleHit[index]);
-                if (!with_antialiasing)
-                {
-                    continue;
-                }
-
-                int prev = j * WIDTH + (i - 1);
-                int next = j * WIDTH + (i + 1);
-                int top = (j - 1) * WIDTH + i;
-                int bot = (j + 1) * WIDTH + i;
-
-                Color prev_c;
-                if (prev >= 0)
-                    prev_c = frameBuffer[prev];
-                Color next_c;
-                if (next < WIDTH && depthBuffer[next] != inf)
-                    next_c = computeColor(i, j, depthBuffer[next], triangleHit[next]);
-                Color top_c;
-                if (top >= 0)
-                    top_c = frameBuffer[top];
-                Color bot_c;
-                if (bot < HEIGHT && depthBuffer[bot] != inf)
-                    bot_c = computeColor(i, j, depthBuffer[bot], triangleHit[bot]);
-
-                auto row_c = mix(prev_c, next_c, 0.5);
-                auto col_c = mix(top_c, bot_c, 0.5);
-                auto avg_c = mix(row_c, col_c, 0.5);
-
-                frameBuffer[index] = mix(frameBuffer[index], avg_c, 0.3);
             }
+        }
+    }
+
+    if (!with_antialiasing)
+        return;
+
+    for (int j = 0; j < HEIGHT; j++)
+    {
+        for (int i = 0; i < WIDTH; i++)
+        {
+            int index = j * WIDTH + i;
+
+            if (depthBuffer[index] == inf)
+                continue;
+
+            int prev = j * WIDTH + (i - 1);
+            int next = j * WIDTH + (i + 1);
+            int top = (j - 1) * WIDTH + i;
+            int bot = (j + 1) * WIDTH + i;
+
+            Color prev_c = Color(0, 0, 0);
+            if (i - 1 >= 0)
+                prev_c = frameBuffer[prev];
+
+            Color next_c = Color(0, 0, 0);
+            if (i + 1 < WIDTH && depthBuffer[next] != inf)
+                next_c = frameBuffer[next];
+
+            Color top_c = Color(0, 0, 0);
+            if (j - 1 >= 0)
+                top_c = frameBuffer[top];
+
+            Color bot_c = Color(0, 0, 0);
+            if (j + 1 < HEIGHT && depthBuffer[bot] != inf)
+                bot_c = frameBuffer[bot];
+
+            auto row_c = mix(prev_c, next_c, 0.5);
+            auto col_c = mix(top_c, bot_c, 0.5);
+            auto avg_c = mix(row_c, col_c, 0.5);
+
+            frameBuffer[index] = mix(frameBuffer[index], avg_c, 0.4);
         }
     }
 }
