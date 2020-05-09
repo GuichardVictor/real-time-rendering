@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(SDL2 REQUIRED COMPONENTS SDL2::SDL2)
 
 add_compile_options(-Wall -Wextra -Werror -pedantic
-        -I${CMAKE_SOURCE_DIR}/include/ -g -fno-stack-protector -z execstack)
+        -I${CMAKE_SOURCE_DIR}/include/ -Ofast)
 
 FIND_PACKAGE( Boost COMPONENTS program_options REQUIRED )
 
