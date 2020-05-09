@@ -4,11 +4,15 @@
 #include "vector3.hh"
 #include "camera.hh"
 
+
+int Camera::HEIGHT = 500;
+int Camera::WIDTH = 500;
+
 Color mix(Color a, Color b, float ratio)
 {
-    auto red = (1 - ratio) * a.red + ratio * b.red;
+    auto red =   (1 - ratio) * a.red   + ratio * b.red;
     auto green = (1 - ratio) * a.green + ratio * b.green;
-    auto blue = (1 - ratio) * a.blue + ratio * b.blue;
+    auto blue =  (1 - ratio) * a.blue  + ratio * b.blue;
 
     return Color(red, green, blue);
 }
@@ -55,22 +59,23 @@ Color Camera::computeColor(int x, int y, float z, const Triangle& tr)
     reflected = reflected.normalize();
     for(const auto& light : lights)
     {
-        Color effectiveColor = light.color_ * tr.color;
-        Color ambientColor = effectiveColor * tr.ambient;
-        Vector3 l = Vector3(intersect, light.center_);
-        l = l.normalize();
-        float angle = dot(l, tr.normal);
-        if(angle < 0.)
-        {
-            continue;
-        }
-        Color diffuseColor = effectiveColor * tr.diffuse * angle;
-        float factor = dot(reflected, l);
-        factor = powf(factor, tr.shininess);
-        if (dot(reflected, l) < 0.)
-            factor = - factor;
-        Color specularColor = light.color_ * tr.specular * factor;
-        res = res + ((ambientColor + diffuseColor + specularColor));
+        auto l = Vector3(intersect, light.center_).normalize();
+        float diff = dot(tr.normal,l);
+        if (diff < 0)
+            diff = 0;
+        auto reflection = Vector3(-l.x_, -l.y_, -l.z_) - tr.normal;
+        auto tmp = dot(reflection, l);
+        if (tmp < 0)
+            tmp = 0;
+        float spec = powf(tmp, 100);
+
+        float ambient_coef = 0.75;
+
+        Color ambient = light.color_ * tr.color * ambient_coef;
+        Color diffuse = light.color_ * tr.color * diff;
+        Color specular = light.color_ * tr.color * spec;
+
+        res = res + ambient + diffuse + specular;
     }
 
     return res;
@@ -84,36 +89,58 @@ void Camera::computeAllColors(bool with_antialiasing)
         for(int i = 0; i < WIDTH; i++)
         {
             int index = j * WIDTH + i;
+            frameBuffer[index] = Color(0.0, 0.0, 0.0);
             if(depthBuffer[index] != inf)
             {
-                if (!with_antialiasing)
-                {
-                    frameBuffer[index] = computeColor(i, j, depthBuffer[index], triangleHit[index]);
-                    continue;
-                }
-
-                int prev = j * WIDTH + (i - 1);
-                int next = j * WIDTH + (i + 1);
-                int top = (j - 1) * WIDTH + i;
-                int bot = (j + 1) * WIDTH + i;
-
-                auto prev_c = frameBuffer[prev];
-                Color next_c;
-                if (depthBuffer[next] != inf)
-                    next_c = computeColor(i, j, depthBuffer[next], triangleHit[next]);
-                auto top_c = frameBuffer[top];
-                Color bot_c;
-                if (depthBuffer[bot] != inf)
-                    bot_c = computeColor(i, j, depthBuffer[bot], triangleHit[bot]);
-
-                auto row_c = mix(prev_c, next_c, 0.5);
-                auto col_c = mix(top_c, bot_c, 0.5);
-                auto avg_c = mix(row_c, col_c, 0.5);
-
-                frameBuffer[index] = mix(frameBuffer[index], avg_c, 0.6);
+                frameBuffer[index] = computeColor(i, j, depthBuffer[index], triangleHit[index]);
             }
         }
     }
+
+    if (!with_antialiasing)
+        return;
+
+    std::vector<Color> post_frameBuffer = std::vector<Color>{frameBuffer.size()};
+
+    for (int j = 0; j < HEIGHT; j++)
+    {
+        for (int i = 0; i < WIDTH; i++)
+        {
+            int index = j * WIDTH + i;
+
+            if (depthBuffer[index] == inf)
+                continue;
+
+            int prev = j * WIDTH + (i - 1);
+            int next = j * WIDTH + (i + 1);
+            int top = (j - 1) * WIDTH + i;
+            int bot = (j + 1) * WIDTH + i;
+
+            Color prev_c = Color(0, 0, 0);
+            if (i - 1 >= 0 && depthBuffer[prev] != inf)
+                prev_c = frameBuffer[prev];
+
+            Color next_c = Color(0, 0, 0);
+            if (i + 1 < WIDTH && depthBuffer[next] != inf)
+                next_c = frameBuffer[next];
+
+            Color top_c = Color(0, 0, 0);
+            if (j - 1 >= 0 && depthBuffer[top] != inf)
+                top_c = frameBuffer[top];
+
+            Color bot_c = Color(0, 0, 0);
+            if (j + 1 < HEIGHT && depthBuffer[bot] != inf)
+                bot_c = frameBuffer[bot];
+
+            auto row_c = mix(prev_c, next_c, 0.5);
+            auto col_c = mix(top_c, bot_c, 0.5);
+            auto avg_c = mix(row_c, col_c, 0.5);
+
+            post_frameBuffer[index] = mix(frameBuffer[index], avg_c, 0.4);
+        }
+    }
+
+    frameBuffer = post_frameBuffer;
 }
 
 void Camera::addShadow()
@@ -157,10 +184,11 @@ void Camera::addShadow()
             float distTgtLight = (lights[0].depthBuffer[lightIndex] + lights[0].zDist_) / cosAngleLight;
 
 
-            if(distCamTgtLight - distTgtLight > 1)
+            if(lights[0].triangleHit[lightIndex] != triangleHit[index] && distCamTgtLight - distTgtLight > 1)
             {
                 frameBuffer[index] = frameBuffer[index] * Color(0.2,0.2,0.2);
             }
+
         }
     }
 }

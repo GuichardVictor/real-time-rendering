@@ -6,10 +6,6 @@
 #include "observer.hh"
 
 
-#define HEIGHT 500
-#define WIDTH 500
-
-
 class Camera : public Observer {
 
 public:
@@ -29,4 +25,8 @@ public:
     void addShadow();
     
     std::vector<DirectionalLight> lights;
+
+
+    static int HEIGHT;
+    static int WIDTH;
 };
