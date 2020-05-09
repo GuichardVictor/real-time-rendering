@@ -99,6 +99,8 @@ void Camera::computeAllColors(bool with_antialiasing)
     if (!with_antialiasing)
         return;
 
+    std::vector<Color> post_frameBuffer = std::vector<Color>{frameBuffer.size()};
+
     for (int j = 0; j < HEIGHT; j++)
     {
         for (int i = 0; i < WIDTH; i++)
@@ -114,7 +116,7 @@ void Camera::computeAllColors(bool with_antialiasing)
             int bot = (j + 1) * WIDTH + i;
 
             Color prev_c = Color(0, 0, 0);
-            if (i - 1 >= 0)
+            if (i - 1 >= 0 && depthBuffer[prev] != inf)
                 prev_c = frameBuffer[prev];
 
             Color next_c = Color(0, 0, 0);
@@ -122,7 +124,7 @@ void Camera::computeAllColors(bool with_antialiasing)
                 next_c = frameBuffer[next];
 
             Color top_c = Color(0, 0, 0);
-            if (j - 1 >= 0)
+            if (j - 1 >= 0 && depthBuffer[top] != inf)
                 top_c = frameBuffer[top];
 
             Color bot_c = Color(0, 0, 0);
@@ -133,9 +135,11 @@ void Camera::computeAllColors(bool with_antialiasing)
             auto col_c = mix(top_c, bot_c, 0.5);
             auto avg_c = mix(row_c, col_c, 0.5);
 
-            frameBuffer[index] = mix(frameBuffer[index], avg_c, 0.4);
+            post_frameBuffer[index] = mix(frameBuffer[index], avg_c, 0.4);
         }
     }
+
+    frameBuffer = post_frameBuffer;
 }
 
 void Camera::addShadow()
