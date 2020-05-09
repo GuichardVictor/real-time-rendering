@@ -59,22 +59,23 @@ Color Camera::computeColor(int x, int y, float z, const Triangle& tr)
     reflected = reflected.normalize();
     for(const auto& light : lights)
     {
-        Color effectiveColor = light.color_ * tr.color;
-        Color ambientColor = effectiveColor * tr.ambient;
-        Vector3 l = Vector3(intersect, light.center_);
-        l = l.normalize();
-        float angle = dot(l, tr.normal);
-        if(angle < 0.)
-        {
-            continue;
-        }
-        Color diffuseColor = effectiveColor * tr.diffuse * angle;
-        float factor = dot(reflected, l);
-        factor = powf(factor, tr.shininess);
-        if (dot(reflected, l) < 0.)
-            factor = - factor;
-        Color specularColor = light.color_ * tr.specular * factor;
-        res = res + ((ambientColor + diffuseColor + specularColor));
+        auto l = Vector3(intersect, light.center_).normalize();
+        float diff = dot(tr.normal,l);
+        if (diff < 0)
+            diff = 0;
+        auto reflection = Vector3(-l.x_, -l.y_, -l.z_) - tr.normal;
+        auto tmp = dot(reflection, l);
+        if (tmp < 0)
+            tmp = 0;
+        float spec = powf(tmp, 100);
+
+        float ambient_coef = 0.75;
+
+        Color ambient = light.color_ * tr.color * ambient_coef;
+        Color diffuse = light.color_ * tr.color * diff;
+        Color specular = light.color_ * tr.color * spec;
+
+        res = res + ambient + diffuse + specular;
     }
 
     return res;
